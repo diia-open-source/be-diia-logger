@@ -1,0 +1,70 @@
+{
+    "name": "@diia-inhouse/diia-logger",
+    "version": "2.10.0",
+    "description": "Logger package",
+    "main": "dist/index.js",
+    "types": "dist/types/index.d.ts",
+    "repository": "https://github.com/diia-open-source/be-diia-logger.git",
+    "author": "Diia",
+    "license": "SEE LICENSE IN LICENSE.md",
+    "engines": {
+        "node": ">=18"
+    },
+    "files": [
+        "dist",
+        "src"
+    ],
+    "scripts": {
+        "start": "node dist/test.js",
+        "build": "rimraf dist/ && tsc",
+        "prepare": "npm run build",
+        "lint": "eslint --ext .ts . && prettier --check .",
+        "lint-fix": "eslint '*/**/*.{js,ts}' --fix && prettier --write .",
+        "lint:lockfile": "lockfile-lint --path package-lock.json --allowed-hosts registry.npmjs.org --validate-https",
+        "test": "jest",
+        "test:unit": "npm run test --selectProjects unit --",
+        "test:coverage": "npm run test --coverage --",
+        "format": "prettier --write \"src/**/*.ts\"",
+        "semantic-release": "semantic-release",
+        "find-circulars": "madge --circular --extensions ts ./"
+    },
+    "dependencies": {
+        "bson": "6.2.0",
+        "lodash": "4.17.21",
+        "pino": "8.16.1",
+        "pino-pretty": "10.2.3"
+    },
+    "peerDependencies": {
+        "@diia-inhouse/types": ">=3.2.1"
+    },
+    "devDependencies": {
+        "@diia-inhouse/configs": "1.26.3",
+        "@diia-inhouse/eslint-config": "3.4.0",
+        "@diia-inhouse/types": "4.25.0",
+        "@types/lodash": "4.14.201",
+        "jest-junit": "16.0.0",
+        "protobufjs": "7.2.5"
+    },
+    "release": {
+        "extends": "@diia-inhouse/configs/dist/semantic-release/package"
+    },
+    "commitlint": {
+        "extends": "@diia-inhouse/configs/dist/commitlint"
+    },
+    "eslintConfig": {
+        "extends": "@diia-inhouse/eslint-config",
+        "parserOptions": {
+            "project": [
+                "./tsconfig.json",
+                "./tests/tsconfig.json"
+            ]
+        }
+    },
+    "prettier": "@diia-inhouse/eslint-config/prettier",
+    "madge": {
+        "tsConfig": "./tsconfig.json"
+    },
+    "jest": {
+        "preset": "@diia-inhouse/configs/dist/jest"
+    }
+}

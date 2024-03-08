@@ -1,0 +1,338 @@
+import { Writable } from 'stream'
+
+import { LogLevel, LoggerConfig } from '@diia-inhouse/types'
+
+import DiiaLogger from '../../src/index'
+
+const config: LoggerConfig = {
+    logLevel: LogLevel.DEBUG,
+    maxObjectDepth: 5,
+}
+
+describe('DiiaLogger', () => {
+    const now = Date.now()
+
+    beforeAll(() => {
+        jest.useFakeTimers({ now })
+    })
+
+    afterAll(() => {
+        jest.useRealTimers()
+    })
+
+    it('should log basic object with message', () => {
+        const currentDate = Date.now()
+        const currentDataIsoString = new Date(currentDate).toISOString()
+
+        jest.spyOn(Date, 'now').mockImplementation(() => currentDate)
+
+        expect.assertions(1)
+        const logger = new DiiaLogger(
+            config,
+            undefined,
+            new Writable({
+                write: (chunk: string, _: unknown, cb: () => void): void => {
+                    const loggerResult = chunk.toString().trim()
+                    const expected = `{"level":"INFO","timestamp":"${currentDataIsoString}","analytics":{"appVersion":"1.0.10"},"log":{},"msg":"hello"}`
+
+                    expect(loggerResult).toBe(expected)
+
+                    cb()
+                },
+            }),
+        )
+
+        logger.log('hello', { analytics: { appVersion: '1.0.10' } })
+    })
+
+    it('should remove sensitive data from log', () => {
+        const currentDate = Date.now()
+        const currentDataIsoString = new Date(currentDate).toISOString()
+
+        jest.spyOn(Date, 'now').mockImplementation(() => currentDate)
+
+        const token = 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjoiZXlKbGJtTWlPaUpCTVRJNFEwSkRMVWhUTWpVMklp'
+
+        const data = {
+            inn: '111222333',
+            itn: '111222333',
+            client: { test: 'some data' },
+            firstName: 'First',
+            lastName: 'Last',
+            middleName: 'Middle',
+            passportSeries: 'AA',
+            passportNumber: '4548895',
+            email: 'test@test.ua',
+            addressOfRegistration: 'Kyiv',
+            addressOfBirth: 'Kyiv',
+            birthDay: '01.01.2020',
+            fio: 'Last First Middle',
+            passport: 'Passport',
+            phone: '+38099123456789',
+            address: 'Kyiv',
+            birthplace: 'Kyiv',
+            fullName: 'Last First',
+            phoneNumber: '+38099123456789',
+            requestorJWE: token,
+            consumerJWE: token,
+            refreshToken: {
+                value: token,
+            },
+            token: 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjoiZXlKbGJtTWlPaUpCTVRJNFEwSkRMVWhUTWpVMklpd2lZV3huSWpvaVVsTkJMVTlCUlZBaUxDSnJhV1FpT2lJek0yVTBZamRqTnkweE1EUTRMVFE0WW1ZdFlqY3pOeTB4WkdGaU1EbGpNRE16WTJJaWZRLmIxc3NGSzY4MkpHOGdaOC1MdlRBQjZHZEFpQmV6Z25fcHdMREpNOHlpM1Ayb2dmZjFHTHNSU3kzcjNKSmFzb0JZVmRlQklQdFFFMzRYQ3o0SEhjTVJSMDRNdHpNYnMtSU5MTl9HNDJxeXBLRGJ6Q3RGdTZqR3I1VUZfUjVrN1E0M1RBUHkzRXo1bnNmWERGd',
+            driverLicense: [
+                {
+                    expiration: '01.03.2025',
+                    photo: 'base64 string',
+                },
+            ],
+            ids: ['5e81bcdd86f0b78b1a511634', '5e8c543b97b9439db8098620'],
+            _id: '5e81bcdd86f0b78b1a511634',
+            file: [
+                {
+                    name: 'IMG_20200330_092414.jpg',
+                    mimeType: 'image/jpeg',
+                    content:
+                        '/9j/4AAQSkZJRgABAQAAAAAAAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/wAALCAAgACABAREA/8QAGQAAAwADAAAAAAAAAAAAAAAAAAYHAwUJ/8QAJBAAAQMEAgIDAQEAAAAAAAAAAQIDBAUGBxEAEgghEzFBJGH/2gAIAQEAAD8A5VcOHDjDju2o155Atmz5j7rDFcrEKmuutAFaEPPobUpO/WwFEjfL5krxzw1HplPmY4u+5KX3yFULCnSbpDTrCFxmkrEhAhtFwpUpYSE9Sf8AOYrk8UmKzk/IlHoVwW9aNt48n0+hVCW/Km1JpdReHxdWvjjl5QU608SVNpSjWt/W4dk+wanivIlx43rMyNKnW1Un6ZIfjFXxOONLKSpHYA9SR62AeMnjjfdkYwzDQshX9Q3avT7eL9RjQ0b05UGmVqh99KB6CQGir39A+j9crbvlhjGRYrEaBhWJRq/b9+wb5pTSapLmxp8nf9okqecJSFJaYCQkH7UfX7oleaV4026LxvGxbQo9n1a7GGYQk0d15pyLGEoyXtr7dnn3lnS33CVhOwnqDoSDKuQJ2Vsk3LkqpwGIUu5qm/U3o7CiptpbqyopSVeyBv8AeKvDhw5//9k=',
+                    size: 788626,
+                },
+            ],
+        }
+
+        expect.assertions(1)
+        const logger = new DiiaLogger(
+            config,
+            undefined,
+            new Writable({
+                write: (chunk: string, _: unknown, cb: () => void): void => {
+                    const loggerResult = chunk.toString().trim()
+                    const expected = {
+                        level: 'ERROR',
+                        timestamp: `${currentDataIsoString}`,
+                        log: {
+                            data: {
+                                inn: '[Redacted]',
+                                itn: '[Redacted]',
+                                client: '[Redacted]',
+                                firstName: '[Redacted]',
+                                lastName: '[Redacted]',
+                                middleName: '[Redacted]',
+                                passportSeries: '[Redacted]',
+                                passportNumber: '[Redacted]',
+                                email: '[Redacted]',
+                                addressOfRegistration: '[Redacted]',
+                                addressOfBirth: '[Redacted]',
+                                birthDay: '[Redacted]',
+                                fio: '[Redacted]',
+                                passport: '[Redacted]',
+                                phone: '[Redacted]',
+                                address: '[Redacted]',
+                                birthplace: '[Redacted]',
+                                fullName: '[Redacted]',
+                                phoneNumber: '[Redacted]',
+                                requestorJWE: 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjoiZXlKbGJtTWlPaUpCTVRJNFEwSkRMVWhUTWpVMklp',
+                                consumerJWE: 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjoiZXlKbGJtTWlPaUpCTVRJNFEwSkRMVWhUTWpVMklp',
+                                refreshToken: '[Redacted]',
+                                token: '[Redacted]',
+                                driverLicense: [
+                                    {
+                                        expiration: '01.03.2025',
+                                        photo: '[Redacted]',
+                                    },
+                                ],
+                                ids: ['5e81bcdd86f0b78b1a511634', '5e8c543b97b9439db8098620'],
+                                _id: '5e81bcdd86f0b78b1a511634',
+                                file: [
+                                    {
+                                        name: 'IMG_20200330_092414.jpg',
+                                        mimeType: 'image/jpeg',
+                                        content:
+                                            '/9j/4AAQSkZJRgABAQAAAAAAAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/wAALCAAgACABAREA/8QAGQAAAwADAAAAAAAAAAAAAAAAAAYHAwUJ/8QAJBAAAQMEAgIDAQEAAAAAAAAAAQIDBAUGBxEAEgghEzFBJGH/2gAIAQEAAD8A5VcOHDjDju2o155Atmz...',
+                                        size: 788626,
+                                    },
+                                ],
+                            },
+                        },
+                        msg: 'error message',
+                    }
+
+                    expect(loggerResult).toBe(JSON.stringify(expected))
+
+                    cb()
+                },
+            }),
+        )
+
+        logger.error('error message', { data })
+    })
+
+    it('should not redact sensetive field if value is absent', () => {
+        const currentDate = Date.now()
+        const currentDataIsoString = new Date(currentDate).toISOString()
+
+        jest.spyOn(Date, 'now').mockImplementation(() => currentDate)
+
+        const data = {
+            itn: '111222333',
+            inn: '',
+            rnokpp: undefined,
+            firstName: null,
+        }
+
+        expect.assertions(1)
+        const logger = new DiiaLogger(
+            config,
+            undefined,
+            new Writable({
+                write: (chunk: string, _: unknown, cb: () => void): void => {
+                    const loggerResult = chunk.toString().trim()
+                    const expected = `{"level":"ERROR","timestamp":"${currentDataIsoString}","log":{"data":{"itn":"[Redacted]","inn":"","firstName":null}},"msg":"error message"}`
+
+                    expect(loggerResult).toBe(expected)
+
+                    cb()
+                },
+            }),
+        )
+
+        logger.error('error message', { data })
+    })
+
+    it('should log nested object correctly', () => {
+        const currentDate = Date.now()
+        const currentDataIsoString = new Date(currentDate).toISOString()
+
+        jest.spyOn(Date, 'now').mockImplementation(() => currentDate)
+
+        const nestedObject = {
+            key1: {
+                key11: {
+                    key111: {
+                        value: 'val text',
+                    },
+                },
+            },
+            key2: {
+                key22: {
+                    key222: {
+                        key2222: {
+                            key22222: {
+                                value: 'val text',
+                            },
+                        },
+                    },
+                },
+            },
+            key3: {
+                key33: 'value 33',
+            },
+            key4: 'value 4',
+        }
+
+        expect.assertions(1)
+        const logger = new DiiaLogger(
+            config,
+            undefined,
+            new Writable({
+                write: (chunk: string, _: unknown, cb: () => void): void => {
+                    const loggerResult = chunk.toString().trim()
+                    const expected = `{"level":"INFO","timestamp":"${currentDataIsoString}","log":{"nestedObject":{"key1":{"key11":{"key111":"[Object]"}},"key2":{"key22":{"key222":"[Object]"}},"key3":{"key33":"value 33"},"key4":"value 4"}},"msg":"nested object"}`
+
+                    expect(loggerResult).toBe(expected)
+
+                    cb()
+                },
+            }),
+        )
+
+        logger.log('nested object', { nestedObject })
+    })
+
+    it('should log Date correctly', () => {
+        const currentDate = Date.now()
+        const currentDataIsoString = new Date(currentDate).toISOString()
+
+        jest.spyOn(Date, 'now').mockImplementation(() => currentDate)
+
+        const date = new Date()
+
+        expect.assertions(1)
+        const logger = new DiiaLogger(
+            config,
+            undefined,
+            new Writable({
+                write: (chunk: string, _: unknown, cb: () => void): void => {
+                    const loggerResult = chunk.toString().trim()
+                    const expected = `{"level":"INFO","timestamp":"${currentDataIsoString}","log":{"date":"${new Date(
+                        date,
+                    ).toISOString()}"},"msg":"log with date"}`
+
+                    expect(loggerResult).toBe(expected)
+
+                    cb()
+                },
+            }),
+        )
+
+        logger.log('log with date', { date })
+    })
+
+    it('should log array correctly', () => {
+        const currentDate = Date.now()
+        const currentDataIsoString = new Date(currentDate).toISOString()
+
+        jest.spyOn(Date, 'now').mockImplementation(() => currentDate)
+
+        expect.assertions(1)
+        const logger = new DiiaLogger(
+            config,
+            undefined,
+            new Writable({
+                write: (chunk: string, _: unknown, cb: () => void): void => {
+                    const loggerResult = chunk.toString().trim()
+                    const expected = `{"level":"INFO","timestamp":"${currentDataIsoString}","log":{"arr":[1,2,3,4,{"someObject":{"value":true}}]},"msg":"log with array"}`
+
+                    expect(loggerResult).toBe(expected)
+
+                    cb()
+                },
+            }),
+        )
+
+        logger.log('log with array', { arr: [1, 2, 3, 4, { someObject: { value: true } }] })
+    })
+
+    it('should write correct logs in case io level is configured', () => {
+        const write = jest.fn()
+        const currentDate = Date.now()
+        const currentDataIsoString = new Date(currentDate).toISOString()
+        const logger = new DiiaLogger(
+            { logLevel: LogLevel.IO },
+            undefined,
+            new Writable({
+                write,
+            }),
+        )
+        const expectedLogLevelsToBeShown = [LogLevel.INFO, LogLevel.ERROR, LogLevel.FATAL, LogLevel.WARN, LogLevel.IO]
+
+        for (const logLevel of expectedLogLevelsToBeShown) {
+            write.mockImplementationOnce((chunk: string, _: unknown, cb: () => void) => {
+                const loggerResult = chunk.toString().trim()
+                const expected = `{"level":"${logLevel.toUpperCase()}","timestamp":"${currentDataIsoString}","analytics":{"appVersion":"1.0.10"},"log":{},"msg":"${logLevel}"}`
+
+                expect(loggerResult).toBe(expected)
+
+                cb()
+            })
+        }
+
+        logger.info('info', { analytics: { appVersion: '1.0.10' } })
+        logger.debug('debug', { analytics: { appVersion: '1.0.10' } })
+        logger.trace('trace', { analytics: { appVersion: '1.0.10' } })
+        logger.error('error', { analytics: { appVersion: '1.0.10' } })
+        logger.fatal('fatal', { analytics: { appVersion: '1.0.10' } })
+        logger.warn('warn', { analytics: { appVersion: '1.0.10' } })
+        logger.io('io', { analytics: { appVersion: '1.0.10' } })
+
+        expect(write).toHaveBeenCalledTimes(expectedLogLevelsToBeShown.length)
+    })
+})
