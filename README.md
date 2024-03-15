@@ -26,7 +26,7 @@ This repository contains the package with main logger functionality.
 Example:
 
 ```
-git clone https://github.com/diia-open-source/diia-logger.git
+git clone https://github.com/diia-open-source/be-diia-logger.git diia-logger
 ```
 
 ---
