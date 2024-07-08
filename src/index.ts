@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { AsyncLocalStorage } from 'async_hooks'
+import { AsyncLocalStorage } from 'node:async_hooks'
 
 import { isObject } from 'lodash'
 import pino, { DestinationStream, Logger as PinoLogger, stdSerializers } from 'pino'
@@ -10,51 +10,62 @@ import { defaultOptions } from './config'
 import { trimmer } from './trimmer'
 
 export default class DiiaLogger implements Logger {
-    private logger!: PinoLogger
+    private logger: PinoLogger<'io'>
 
     private trim: ReturnType<typeof trimmer>
 
     constructor(
         private readonly options: LoggerConfig = {},
         private readonly asyncLocalStorage?: AsyncLocalStorage<AlsData>,
-        destinationStream: DestinationStream | undefined = undefined,
+        destinationStream: DestinationStream | null = null,
+        existedLogger: PinoLogger<'io'> | null = null,
     ) {
         const trimmerOptions: TrimmerOptions = { ...defaultOptions, ...options }
+        const {
+            redact: { paths: redactPaths },
+        } = trimmerOptions
 
-        this.trim = trimmer(trimmerOptions)
-
-        const streamOption = destinationStream ?? undefined
-
-        this.logger = pino(
-            {
-                timestamp: () => `,"timestamp":"${new Date(Date.now()).toISOString()}"`,
-                level: this.options.logLevel ?? LogLevel.INFO,
-                base: undefined,
-                formatters: {
-                    level: (l) => ({ level: l.toUpperCase() }),
-                },
-                mixin: () => ({
-                    headers: this.asyncLocalStorage?.getStore()?.logData,
-                }),
-                serializers: {
-                    err: (value) => {
-                        const res = stdSerializers.err(value)
-                        if (!isObject(res)) {
-                            return res
-                        }
-
-                        res.constructorName = res.type
-                        res.type = value.type
-
-                        return res
+        this.logger =
+            existedLogger ||
+            pino(
+                {
+                    timestamp: () => `,"timestamp":"${new Date(Date.now()).toISOString()}"`,
+                    level: this.options.logLevel ?? LogLevel.INFO,
+                    base: undefined,
+                    formatters: {
+                        level: (l) => ({ level: l.toUpperCase() }),
                     },
+                    mixin: () => ({
+                        headers: this.asyncLocalStorage?.getStore()?.logData,
+                    }),
+                    serializers: {
+                        err: (value) => {
+                            const res = stdSerializers.err(value)
+                            if (!isObject(res)) {
+                                return res
+                            }
+
+                            res.constructorName = res.type
+                            res.type = value.type
+
+                            return res
+                        },
+                    },
+                    customLevels: {
+                        [LogLevel.IO]: 25,
+                    },
+                    redact: redactPaths,
                 },
-                customLevels: {
-                    [LogLevel.IO]: 25,
-                },
-            },
-            <DestinationStream>streamOption,
-        )
+                destinationStream || undefined,
+            )
+
+        this.trim = trimmer(trimmerOptions, this.logger.isLevelEnabled(LogLevel.DEBUG))
+    }
+
+    child(bindings: Record<string, unknown>, destinationStream?: DestinationStream): Logger {
+        const pinoLogger = this.logger.child(bindings)
+
+        return new DiiaLogger(this.options, this.asyncLocalStorage, destinationStream, pinoLogger)
     }
 
     log(message: string, data: unknown = {}): void {
@@ -120,3 +131,7 @@ export default class DiiaLogger implements Logger {
         return data
     }
 }
+
+export { DiiaLogger }
+
+export { defaultOptions } from './config'

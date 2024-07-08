@@ -4,16 +4,44 @@ import { isObject } from 'lodash'
 
 import { TrimmerOptions } from '@diia-inhouse/types'
 
-const walker = (opts: TrimmerOptions, node: any, depth: number): any => {
+function redactFullName(text: string): string {
+    // eslint-disable-next-line unicorn/better-regex
+    const fullNameRegex = /(?:^|\s)(?<fullname>[А-ЯҐЄІЇA-Z][а-яґєіїa-z]+(?:(\s|-)[А-ЯҐЄІЇA-Z][а-яґєіїa-z-]+)+)(?:\s|$)/g
+
+    return text.replaceAll(fullNameRegex, (match, ...args) => {
+        const fullname: string = args.at(-1)?.fullname
+
+        if (!fullname) {
+            return match
+        }
+
+        return ` [Fullname redacted: ${fullname
+            .split(' ')
+            .map((part) => part[0])
+            .join('.')}.] `
+    })
+}
+
+function formatString(str: string, { maxStringLength, endLengthToLog }: TrimmerOptions): string {
+    const length = str.length
+    const truncatedString =
+        length > maxStringLength
+            ? `${str.slice(0, maxStringLength - endLengthToLog)}...${str.slice(0 - endLengthToLog)} (${length} chars)`
+            : str
+
+    return truncatedString
+}
+
+const walker = (opts: TrimmerOptions, node: any, depth: number, isRedactionDisabled: boolean): any => {
     if (node instanceof Error) {
         return node
     }
 
     if (typeof node === 'string') {
-        return node.length > opts.maxStringLength ? `${node.substring(0, opts.maxStringLength)}...` : node
+        return formatString(node, opts)
     }
 
-    if (typeof node === 'number' || typeof node === 'boolean' || typeof node === 'undefined' || node === null) {
+    if (typeof node === 'number' || typeof node === 'boolean' || node === undefined || node === null) {
         return node
     }
 
@@ -48,21 +76,34 @@ const walker = (opts: TrimmerOptions, node: any, depth: number): any => {
 
             return Object.fromEntries(visibleObjectProperties)
         }
-    }
 
-    if (isObject(node)) {
         const keys = Object.getOwnPropertyNames(node)
-
-        if (keys.length) {
+        if (keys.length > 0) {
             const output: Record<string, any> = Array.isArray(node) ? [] : {}
 
-            Object.entries(node).forEach(([key, value]) => {
+            for (const [key, value] of Object.entries(node)) {
+                if (isRedactionDisabled) {
+                    output[key] = walker(opts, value, depth + 1, isRedactionDisabled)
+                    continue
+                }
+
                 if (!value) {
                     output[key] = value
-                } else {
-                    output[key] = opts.redact.includes(key) ? '[Redacted]' : walker(opts, value, depth + 1)
+                    continue
                 }
-            })
+
+                if (opts.redact.fields?.includes(key)) {
+                    output[key] = '[Redacted]'
+                    continue
+                }
+
+                if (typeof value === 'string' && opts.redact.fieldsToRedactFullname?.includes(key)) {
+                    output[key] = redactFullName(value)
+                    continue
+                }
+
+                output[key] = walker(opts, value, depth + 1, isRedactionDisabled)
+            }
 
             return output
         }
@@ -73,8 +114,8 @@ const walker = (opts: TrimmerOptions, node: any, depth: number): any => {
     return node
 }
 
-export const trimmer = (opts: TrimmerOptions): ((i: unknown) => any) => {
+export const trimmer = (opts: TrimmerOptions, isRedactionDisabled: boolean): ((i: unknown) => any) => {
     return (input: unknown): any => {
-        return walker(opts, input, 0)
+        return walker(opts, input, 0, isRedactionDisabled)
     }
 }

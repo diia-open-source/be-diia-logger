@@ -1,6 +1,6 @@
 {
     "name": "@diia-inhouse/diia-logger",
-    "version": "2.10.1",
+    "version": "3.2.0",
     "description": "Logger package",
     "main": "dist/index.js",
     "types": "dist/types/index.d.ts",
@@ -29,21 +29,27 @@
         "find-circulars": "madge --circular --extensions ts ./"
     },
     "dependencies": {
-        "bson": "6.2.0",
+        "bson": "6.7.0",
         "lodash": "4.17.21",
-        "pino": "8.16.1",
-        "pino-pretty": "10.2.3"
+        "pino": "9.1.0",
+        "pino-pretty": "11.1.0"
     },
     "peerDependencies": {
-        "@diia-inhouse/types": ">=3.2.1"
+        "@diia-inhouse/types": ">=6.30.0"
     },
     "devDependencies": {
-        "@diia-inhouse/configs": "1.26.3",
-        "@diia-inhouse/eslint-config": "3.4.0",
-        "@diia-inhouse/types": "4.25.0",
-        "@types/lodash": "4.14.201",
+        "@diia-inhouse/configs": "1.31.1",
+        "@diia-inhouse/eslint-config": "5.1.0",
+        "@diia-inhouse/eslint-plugin": "1.6.0",
+        "@diia-inhouse/types": "6.30.0",
+        "@types/lodash": "4.17.5",
+        "@typescript-eslint/typescript-estree": "7.10.0",
         "jest-junit": "16.0.0",
-        "protobufjs": "7.2.5"
+        "lockfile-lint": "4.13.2",
+        "madge": "7.0.0",
+        "protobufjs": "7.2.5",
+        "rimraf": "5.0.7",
+        "type-fest": "4.18.2"
     },
     "release": {
         "extends": "@diia-inhouse/configs/dist/semantic-release/package"
