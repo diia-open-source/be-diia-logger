@@ -1,6 +1,6 @@
 {
     "name": "@diia-inhouse/diia-logger",
-    "version": "3.2.0",
+    "version": "3.3.0",
     "description": "Logger package",
     "main": "dist/index.js",
     "types": "dist/types/index.d.ts",
@@ -35,15 +35,15 @@
         "pino-pretty": "11.1.0"
     },
     "peerDependencies": {
-        "@diia-inhouse/types": ">=6.30.0"
+        "@diia-inhouse/types": ">=6.33.0"
     },
     "devDependencies": {
-        "@diia-inhouse/configs": "1.31.1",
+        "@diia-inhouse/configs": "1.32.0",
         "@diia-inhouse/eslint-config": "5.1.0",
         "@diia-inhouse/eslint-plugin": "1.6.0",
-        "@diia-inhouse/types": "6.30.0",
-        "@types/lodash": "4.17.5",
-        "@typescript-eslint/typescript-estree": "7.10.0",
+        "@diia-inhouse/types": "6.33.0",
+        "@types/lodash": "4.17.6",
+        "@typescript-eslint/typescript-estree": "7.15.0",
         "jest-junit": "16.0.0",
         "lockfile-lint": "4.13.2",
         "madge": "7.0.0",

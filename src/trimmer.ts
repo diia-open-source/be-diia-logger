@@ -92,12 +92,12 @@ const walker = (opts: TrimmerOptions, node: any, depth: number, isRedactionDisab
                     continue
                 }
 
-                if (opts.redact.fields?.includes(key)) {
+                if (opts.redact.fields?.has(key)) {
                     output[key] = '[Redacted]'
                     continue
                 }
 
-                if (typeof value === 'string' && opts.redact.fieldsToRedactFullname?.includes(key)) {
+                if (typeof value === 'string' && opts.redact.fieldsToRedactFullname?.has(key)) {
                     output[key] = redactFullName(value)
                     continue
                 }

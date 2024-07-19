@@ -8,7 +8,7 @@ export const defaultOptions: LoggerOptions = {
     maxObjectDepth: 8,
     maxObjectBreadth: 50,
     redact: {
-        fields: [
+        fields: new Set([
             'inn',
             'itn',
             'client',
@@ -82,8 +82,8 @@ export const defaultOptions: LoggerOptions = {
             'dateFirstReg',
             'number',
             'residenceRegistrationPlace',
-        ],
-        paths: [],
-        fieldsToRedactFullname: ['value', 'name', 'title', 'creditors', 'pay_text'],
+        ]),
+        paths: new Set(),
+        fieldsToRedactFullname: new Set(['value', 'name', 'title', 'creditors', 'pay_text', 'order_description']),
     },
 }

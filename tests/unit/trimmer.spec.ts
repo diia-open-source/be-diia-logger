@@ -9,9 +9,9 @@ describe('trimmer', () => {
         maxArrayLength: 4,
         maxObjectBreadth: 20,
         redact: {
-            fields: ['password'],
-            paths: [],
-            fieldsToRedactFullname: [],
+            fields: new Set(['password']),
+            paths: new Set(),
+            fieldsToRedactFullname: new Set(),
         },
         endLengthToLog: 5,
     }

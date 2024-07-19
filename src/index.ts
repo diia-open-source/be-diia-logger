@@ -54,7 +54,7 @@ export default class DiiaLogger implements Logger {
                     customLevels: {
                         [LogLevel.IO]: 25,
                     },
-                    redact: redactPaths,
+                    redact: [...(redactPaths || [])],
                 },
                 destinationStream || undefined,
             )
