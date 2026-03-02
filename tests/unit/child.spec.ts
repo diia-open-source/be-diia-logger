@@ -1,39 +1,41 @@
 import { Writable } from 'node:stream'
 
-import { LogLevel, LoggerConfig } from '@diia-inhouse/types'
+import { LogLevel, LoggerOptions } from '@diia-inhouse/types'
+import { utils } from '@diia-inhouse/utils'
 
 import DiiaLogger from '../../src/index'
 
-const config: LoggerConfig = {
+const options: LoggerOptions = {
     logLevel: LogLevel.DEBUG,
     maxObjectDepth: 5,
 }
 
 describe('DiiaLogger', () => {
     const now = Date.now()
+    const serviceVersion = utils.getServiceVersion()
 
     beforeAll(() => {
-        jest.useFakeTimers({ now })
+        vi.useFakeTimers({ now })
     })
 
     afterAll(() => {
-        jest.useRealTimers()
+        vi.useRealTimers()
     })
 
     it('should log from a child with bindings', () => {
         const currentDate = Date.now()
         const currentDataIsoString = new Date(currentDate).toISOString()
 
-        jest.spyOn(Date, 'now').mockImplementation(() => currentDate)
+        vi.spyOn(Date, 'now').mockImplementation(() => currentDate)
 
         expect.assertions(1)
         const logger = new DiiaLogger(
-            config,
+            options,
             undefined,
             new Writable({
                 write: (chunk: string, _: unknown, cb: () => void): void => {
                     const loggerResult = chunk.toString().trim()
-                    const expected = `{"level":"INFO","timestamp":"${currentDataIsoString}","childProp":"childValue","analytics":{"appVersion":"1.0.10"},"log":{},"msg":"hello"}`
+                    const expected = `{"level":"INFO","timestamp":"${currentDataIsoString}","childProp":"childValue","serviceVersion":"${serviceVersion}","analytics":{"appVersion":"1.0.10"},"log":{},"msg":"hello"}`
 
                     expect(loggerResult).toBe(expected)
 

@@ -2,27 +2,11 @@
 import { ObjectId } from 'bson'
 import { isObject } from 'lodash'
 
-import { TrimmerOptions } from '@diia-inhouse/types'
+import { InternalLoggerOptions } from './interfaces'
+import { redactFullName } from './redactors/fullName'
+import { redactItn } from './redactors/itn'
 
-function redactFullName(text: string): string {
-    // eslint-disable-next-line unicorn/better-regex
-    const fullNameRegex = /(?:^|\s)(?<fullname>[А-ЯҐЄІЇA-Z][а-яґєіїa-z]+(?:(\s|-)[А-ЯҐЄІЇA-Z][а-яґєіїa-z-]+)+)(?:\s|$)/g
-
-    return text.replaceAll(fullNameRegex, (match, ...args) => {
-        const fullname: string = args.at(-1)?.fullname
-
-        if (!fullname) {
-            return match
-        }
-
-        return ` [Fullname redacted: ${fullname
-            .split(' ')
-            .map((part) => part[0])
-            .join('.')}.] `
-    })
-}
-
-function formatString(str: string, { maxStringLength, endLengthToLog }: TrimmerOptions): string {
+function trimString(str: string, { maxStringLength, endLengthToLog }: InternalLoggerOptions): string {
     const length = str.length
     const truncatedString =
         length > maxStringLength
@@ -32,13 +16,64 @@ function formatString(str: string, { maxStringLength, endLengthToLog }: TrimmerO
     return truncatedString
 }
 
-const walker = (opts: TrimmerOptions, node: any, depth: number, isRedactionDisabled: boolean): any => {
+function trimObject(opts: InternalLoggerOptions, node: object, depth: number, isRedactionDisabled: boolean): object {
+    const propertiesCount = Object.keys(node).length
+    if (propertiesCount > opts.maxObjectBreadth) {
+        const visibleObjectProperties = Object.entries(node).slice(0, opts.maxObjectBreadth)
+
+        visibleObjectProperties.push(['...', `${propertiesCount - opts.maxObjectBreadth} more properties`])
+
+        return Object.fromEntries(visibleObjectProperties)
+    }
+
+    const keys = Object.getOwnPropertyNames(node)
+    if (keys.length > 0) {
+        const output: Record<string, any> = Array.isArray(node) ? [] : {}
+
+        for (const [key, value] of Object.entries(node)) {
+            if (isRedactionDisabled) {
+                output[key] = trimWalker(opts, value, depth + 1, isRedactionDisabled)
+                continue
+            }
+
+            if (!value) {
+                output[key] = value
+                continue
+            }
+
+            if (opts.redact.fields?.has(key)) {
+                output[key] = '[Redacted]'
+                continue
+            }
+
+            output[key] = trimWalker(opts, value, depth + 1, isRedactionDisabled)
+
+            if (typeof value === 'string' || Array.isArray(value)) {
+                if (opts.redact.fieldsToRedactFullname?.has(key)) {
+                    output[key] = redactionWalker(opts, key, output[key], isRedactionDisabled)
+                }
+
+                if (opts.redact.fieldsToRedactItn?.has(key)) {
+                    output[key] = redactionWalker(opts, key, output[key], isRedactionDisabled)
+                }
+
+                continue
+            }
+        }
+
+        return output
+    }
+
+    return node
+}
+
+const trimWalker = (opts: InternalLoggerOptions, node: any, depth: number, isRedactionDisabled: boolean): any => {
     if (node instanceof Error) {
         return node
     }
 
     if (typeof node === 'string') {
-        return formatString(node, opts)
+        return trimString(node, opts)
     }
 
     if (typeof node === 'number' || typeof node === 'boolean' || node === undefined || node === null) {
@@ -67,55 +102,43 @@ const walker = (opts: TrimmerOptions, node: any, depth: number, isRedactionDisab
         return node.toString()
     }
 
-    if (isObject(node)) {
-        const propertiesCount = Object.keys(node).length
-        if (propertiesCount > opts.maxObjectBreadth) {
-            const visibleObjectProperties = Object.entries(node).slice(0, opts.maxObjectBreadth)
-
-            visibleObjectProperties.push(['...', `${propertiesCount - opts.maxObjectBreadth} more properties`])
-
-            return Object.fromEntries(visibleObjectProperties)
-        }
-
-        const keys = Object.getOwnPropertyNames(node)
-        if (keys.length > 0) {
-            const output: Record<string, any> = Array.isArray(node) ? [] : {}
-
-            for (const [key, value] of Object.entries(node)) {
-                if (isRedactionDisabled) {
-                    output[key] = walker(opts, value, depth + 1, isRedactionDisabled)
-                    continue
-                }
-
-                if (!value) {
-                    output[key] = value
-                    continue
-                }
-
-                if (opts.redact.fields?.has(key)) {
-                    output[key] = '[Redacted]'
-                    continue
-                }
-
-                if (typeof value === 'string' && opts.redact.fieldsToRedactFullname?.has(key)) {
-                    output[key] = redactFullName(value)
-                    continue
-                }
-
-                output[key] = walker(opts, value, depth + 1, isRedactionDisabled)
-            }
-
-            return output
-        }
-
+    if (node instanceof Date) {
         return node
+    }
+
+    if (isObject(node)) {
+        return trimObject(opts, node, depth, isRedactionDisabled)
     }
 
     return node
 }
 
-export const trimmer = (opts: TrimmerOptions, isRedactionDisabled: boolean): ((i: unknown) => any) => {
+const redactionWalker = (opts: InternalLoggerOptions, key: string, value: string | any[], isRedactionDisabled: boolean): string | any[] => {
+    if (Array.isArray(value)) {
+        return value.map((item) => redactionWalker(opts, key, item, isRedactionDisabled))
+    }
+
+    if (typeof value !== 'string') {
+        return value
+    }
+
+    if (opts.redact.fieldsToRedactFullname?.has(key)) {
+        value = redactFullName(value)
+    }
+
+    if (opts.redact.fieldsToRedactItn?.has(key)) {
+        value = redactItn(value)
+    }
+
+    return value
+}
+
+export const trimmer = (opts: InternalLoggerOptions, isRedactionDisabled: boolean): ((i: unknown) => any) => {
     return (input: unknown): any => {
-        return walker(opts, input, 0, isRedactionDisabled)
+        try {
+            return trimWalker(opts, input, 0, isRedactionDisabled)
+        } catch (err) {
+            return { err, msg: 'Failed to trim logger input' }
+        }
     }
 }

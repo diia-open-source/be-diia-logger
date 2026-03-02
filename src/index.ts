@@ -1,12 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { AsyncLocalStorage } from 'node:async_hooks'
 
-import { isObject } from 'lodash'
+import { isObject, merge } from 'lodash'
 import pino, { DestinationStream, Logger as PinoLogger, stdSerializers } from 'pino'
 
-import { AlsData, LogData, LogLevel, Logger, LoggerConfig, TrimmerOptions } from '@diia-inhouse/types'
+import { AlsData, LogData, LogLevel, Logger, LoggerOptions } from '@diia-inhouse/types'
+import type * as Utils from '@diia-inhouse/utils'
 
 import { defaultOptions } from './config'
+import { InternalLoggerOptions } from './interfaces'
 import { trimmer } from './trimmer'
 
 export default class DiiaLogger implements Logger {
@@ -15,15 +17,15 @@ export default class DiiaLogger implements Logger {
     private trim: ReturnType<typeof trimmer>
 
     constructor(
-        private readonly options: LoggerConfig = {},
+        private readonly options: LoggerOptions = {},
         private readonly asyncLocalStorage?: AsyncLocalStorage<AlsData>,
         destinationStream: DestinationStream | null = null,
         existedLogger: PinoLogger<'io'> | null = null,
     ) {
-        const trimmerOptions: TrimmerOptions = { ...defaultOptions, ...options }
+        const internalOptions = this.getOptions()
         const {
             redact: { paths: redactPaths },
-        } = trimmerOptions
+        } = internalOptions
 
         this.logger =
             existedLogger ||
@@ -37,6 +39,7 @@ export default class DiiaLogger implements Logger {
                     },
                     mixin: () => ({
                         headers: this.asyncLocalStorage?.getStore()?.logData,
+                        serviceVersion: this.getServiceVersion(),
                     }),
                     serializers: {
                         err: (value) => {
@@ -59,7 +62,7 @@ export default class DiiaLogger implements Logger {
                 destinationStream || undefined,
             )
 
-        this.trim = trimmer(trimmerOptions, this.logger.isLevelEnabled(LogLevel.DEBUG))
+        this.trim = trimmer(internalOptions, this.logger.isLevelEnabled(LogLevel.DEBUG))
     }
 
     child(bindings: Record<string, unknown>, destinationStream?: DestinationStream): Logger {
@@ -77,7 +80,7 @@ export default class DiiaLogger implements Logger {
     }
 
     io(message: string, data: unknown = {}): void {
-        this.printMessage(<pino.Level>'io', message, data)
+        this.printMessage('io' as pino.Level, message, data)
     }
 
     error(message: string, data: unknown = {}): void {
@@ -129,6 +132,31 @@ export default class DiiaLogger implements Logger {
         }
 
         return data
+    }
+
+    private getOptions(): InternalLoggerOptions {
+        const options = merge({}, defaultOptions, this.options)
+        const { redact } = options
+
+        return {
+            ...options,
+            redact: {
+                fields: new Set(redact.fields),
+                paths: new Set(redact.paths),
+                fieldsToRedactFullname: new Set(redact.fieldsToRedactFullname),
+                fieldsToRedactItn: new Set(redact.fieldsToRedactItn),
+            },
+        }
+    }
+
+    private getServiceVersion(): string | undefined {
+        try {
+            const { utils } = require('@diia-inhouse/utils') as typeof Utils
+
+            return utils.getServiceVersion()
+        } catch {
+            return undefined
+        }
     }
 }
 

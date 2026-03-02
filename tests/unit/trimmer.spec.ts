@@ -1,9 +1,11 @@
-import { TrimmerOptions } from '@diia-inhouse/types'
+import { LogLevel } from '@diia-inhouse/types'
 
+import { InternalLoggerOptions } from '../../src/interfaces'
 import { trimmer } from '../../src/trimmer'
 
 describe('trimmer', () => {
-    const opts: TrimmerOptions = {
+    const opts: InternalLoggerOptions = {
+        logLevel: LogLevel.INFO,
         maxStringLength: 20,
         maxObjectDepth: 2,
         maxArrayLength: 4,
@@ -12,6 +14,7 @@ describe('trimmer', () => {
             fields: new Set(['password']),
             paths: new Set(),
             fieldsToRedactFullname: new Set(),
+            fieldsToRedactItn: new Set(),
         },
         endLengthToLog: 5,
     }
