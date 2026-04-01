@@ -103,6 +103,10 @@ export const defaultOptions = {
             'oldLastName',
             'oldFirstName',
             'oldMiddleName',
+            'personName',
+            'personSurname',
+            'personBirthDate',
+            'personFullName',
         ],
         paths: [],
         fieldsToRedactFullname: [
