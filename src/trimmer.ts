@@ -2,6 +2,9 @@
 import { ObjectId } from 'bson'
 import { isObject } from 'lodash'
 
+import { LoggerOptions } from '@diia-inhouse/types'
+
+import { toInternalLoggerOptions } from './config'
 import { InternalLoggerOptions } from './interfaces'
 import { redactFullName } from './redactors/fullName'
 import { redactItn } from './redactors/itn'
@@ -142,3 +145,6 @@ export const trimmer = (opts: InternalLoggerOptions, isRedactionDisabled: boolea
         }
     }
 }
+
+export const createTrimmer = (options: LoggerOptions = {}, isRedactionDisabled = false): ((i: unknown) => any) =>
+    trimmer(toInternalLoggerOptions(options), isRedactionDisabled)

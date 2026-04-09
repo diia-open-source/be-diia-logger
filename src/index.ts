@@ -1,14 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { AsyncLocalStorage } from 'node:async_hooks'
 
-import { isObject, merge } from 'lodash'
+import { isObject } from 'lodash'
 import pino, { DestinationStream, Logger as PinoLogger, stdSerializers } from 'pino'
 
 import { AlsData, LogData, LogLevel, Logger, LoggerOptions } from '@diia-inhouse/types'
 import type * as Utils from '@diia-inhouse/utils'
 
-import { defaultOptions } from './config'
-import { InternalLoggerOptions } from './interfaces'
+import { toInternalLoggerOptions } from './config'
 import { trimmer } from './trimmer'
 
 export default class DiiaLogger implements Logger {
@@ -22,7 +21,7 @@ export default class DiiaLogger implements Logger {
         destinationStream: DestinationStream | null = null,
         existedLogger: PinoLogger<'io'> | null = null,
     ) {
-        const internalOptions = this.getOptions()
+        const internalOptions = toInternalLoggerOptions(this.options)
         const {
             redact: { paths: redactPaths },
         } = internalOptions
@@ -134,21 +133,6 @@ export default class DiiaLogger implements Logger {
         return data
     }
 
-    private getOptions(): InternalLoggerOptions {
-        const options = merge({}, defaultOptions, this.options)
-        const { redact } = options
-
-        return {
-            ...options,
-            redact: {
-                fields: new Set(redact.fields),
-                paths: new Set(redact.paths),
-                fieldsToRedactFullname: new Set(redact.fieldsToRedactFullname),
-                fieldsToRedactItn: new Set(redact.fieldsToRedactItn),
-            },
-        }
-    }
-
     private getServiceVersion(): string | undefined {
         try {
             const { utils } = require('@diia-inhouse/utils') as typeof Utils
@@ -163,3 +147,5 @@ export default class DiiaLogger implements Logger {
 export { DiiaLogger }
 
 export { defaultOptions } from './config'
+
+export { createTrimmer } from './trimmer'

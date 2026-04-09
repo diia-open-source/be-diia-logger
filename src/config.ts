@@ -1,4 +1,8 @@
+import { merge } from 'lodash'
+
 import { LogLevel, LoggerOptions } from '@diia-inhouse/types'
+
+import { InternalLoggerOptions } from './interfaces'
 
 export const defaultOptions = {
     logLevel: LogLevel.INFO,
@@ -131,3 +135,18 @@ export const defaultOptions = {
         fieldsToRedactItn: ['label', 'paymentPurpose', 'subject', 'value'],
     },
 } satisfies LoggerOptions
+
+export const toInternalLoggerOptions = (options: LoggerOptions = {}): InternalLoggerOptions => {
+    const merged = merge({}, defaultOptions, options)
+    const { redact } = merged
+
+    return {
+        ...merged,
+        redact: {
+            fields: new Set(redact.fields),
+            paths: new Set(redact.paths),
+            fieldsToRedactFullname: new Set(redact.fieldsToRedactFullname),
+            fieldsToRedactItn: new Set(redact.fieldsToRedactItn),
+        },
+    }
+}
