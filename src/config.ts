@@ -111,6 +111,11 @@ export const defaultOptions = {
             'personSurname',
             'personBirthDate',
             'personFullName',
+            'INN',
+            'D_DOC',
+            'N_DOC',
+            'S_DOC',
+            'N_REG',
         ],
         paths: [],
         fieldsToRedactFullname: [
