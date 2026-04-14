@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { ObjectId } from 'bson'
 import { isObject } from 'lodash'
 
 import { LoggerOptions } from '@diia-inhouse/types'
@@ -101,7 +100,7 @@ const trimWalker = (opts: InternalLoggerOptions, node: any, depth: number, isRed
         return node.slice(0, opts.maxArrayLength).concat(`... and ${itemsAboveLimit} more items`)
     }
 
-    if (ObjectId.isValid(node)) {
+    if (node?.['_bsontype'] === 'ObjectId') {
         return node.toString()
     }
 

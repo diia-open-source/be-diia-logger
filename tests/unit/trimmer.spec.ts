@@ -25,6 +25,19 @@ describe('trimmer', () => {
 
         expect(trim(input)).toEqual(input)
     })
+
+    it('should not treat plain objects with ObjectId-like id as ObjectId', () => {
+        const trim = trimmer(opts, false)
+        const params = { id: '507f1f77bcf86cd799439011', bucket: 'diia-private' }
+
+        const result = trim(params)
+
+        expect(result).toEqual(expect.objectContaining({ bucket: 'diia-private' }))
+        expect(typeof result.id).toBe('string')
+        expect(result.id).toContain('507f1f77bcf86cd')
+        expect(result.id).not.toBe('[object Object]')
+    })
+
     it('should trim and redact sensitive information from objects', () => {
         const trim = trimmer(opts, false)
 
