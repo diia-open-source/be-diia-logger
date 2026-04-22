@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { AsyncLocalStorage } from 'node:async_hooks'
 
+import { context, trace } from '@opentelemetry/api'
 import { isObject } from 'lodash'
 import pino, { DestinationStream, Logger as PinoLogger, stdSerializers } from 'pino'
 
@@ -36,10 +37,15 @@ export default class DiiaLogger implements Logger {
                     formatters: {
                         level: (l) => ({ level: l.toUpperCase() }),
                     },
-                    mixin: () => ({
-                        headers: this.asyncLocalStorage?.getStore()?.logData,
-                        serviceVersion: this.getServiceVersion(),
-                    }),
+                    mixin: () => {
+                        const logData = this.asyncLocalStorage?.getStore()?.logData
+                        const spanId = trace.getSpan(context.active())?.spanContext().spanId
+
+                        return {
+                            headers: spanId ? { ...logData, spanId } : logData,
+                            serviceVersion: this.getServiceVersion(),
+                        }
+                    },
                     serializers: {
                         err: (value) => {
                             const res = stdSerializers.err(value)

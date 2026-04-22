@@ -1,6 +1,9 @@
+import { AsyncLocalStorage } from 'node:async_hooks'
 import { Writable } from 'node:stream'
 
-import { LogLevel, LoggerOptions } from '@diia-inhouse/types'
+import { SpanContext, TraceFlags, trace } from '@opentelemetry/api'
+
+import { AlsData, LogLevel, LoggerOptions } from '@diia-inhouse/types'
 import { utils } from '@diia-inhouse/utils'
 
 import DiiaLogger from '../../src/index'
@@ -184,5 +187,84 @@ describe('DiiaLogger', () => {
         logger.io('io', { analytics: { appVersion: '1.0.10' } })
 
         expect(write).toHaveBeenCalledTimes(expectedLogLevelsToBeShown.length)
+    })
+
+    describe('OpenTelemetry span enrichment', () => {
+        const spanContext: SpanContext = {
+            traceId: '0af7651916cd43dd8448eb211c80319c',
+            spanId: 'b7ad6b7169203331',
+            traceFlags: TraceFlags.SAMPLED,
+        }
+
+        it('adds spanId from the active span into headers', () => {
+            vi.spyOn(trace, 'getSpan').mockReturnValue(trace.wrapSpanContext(spanContext))
+
+            expect.assertions(2)
+            const logger = new DiiaLogger(
+                options,
+                undefined,
+                new Writable({
+                    write: (chunk: string, _: unknown, cb: () => void): void => {
+                        const parsed = JSON.parse(chunk.toString().trim())
+
+                        expect(parsed.headers).toEqual({ spanId: 'b7ad6b7169203331' })
+                        expect(parsed.msg).toBe('hello')
+
+                        cb()
+                    },
+                }),
+            )
+
+            logger.log('hello')
+        })
+
+        it('merges spanId with existing AsyncLocalStorage logData', () => {
+            vi.spyOn(trace, 'getSpan').mockReturnValue(trace.wrapSpanContext(spanContext))
+
+            const asyncLocalStorage = new AsyncLocalStorage<AlsData>()
+
+            expect.assertions(1)
+            const logger = new DiiaLogger(
+                options,
+                asyncLocalStorage,
+                new Writable({
+                    write: (chunk: string, _: unknown, cb: () => void): void => {
+                        const parsed = JSON.parse(chunk.toString().trim())
+
+                        expect(parsed.headers).toEqual({
+                            traceId: '0af7651916cd43dd8448eb211c80319c',
+                            spanId: 'b7ad6b7169203331',
+                        })
+
+                        cb()
+                    },
+                }),
+            )
+
+            asyncLocalStorage.run({ logData: { traceId: '0af7651916cd43dd8448eb211c80319c' } }, () => {
+                logger.log('hello')
+            })
+        })
+
+        it('omits spanId when no span is active', () => {
+            vi.spyOn(trace, 'getSpan').mockReturnValue()
+
+            expect.assertions(1)
+            const logger = new DiiaLogger(
+                options,
+                undefined,
+                new Writable({
+                    write: (chunk: string, _: unknown, cb: () => void): void => {
+                        const parsed = JSON.parse(chunk.toString().trim())
+
+                        expect(parsed).not.toHaveProperty('headers')
+
+                        cb()
+                    },
+                }),
+            )
+
+            logger.log('hello')
+        })
     })
 })
