@@ -1,6 +1,6 @@
 {
     "name": "@diia-inhouse/diia-logger",
-    "version": "3.20.8",
+    "version": "3.20.9",
     "description": "Logger package",
     "main": "dist/index.js",
     "types": "dist/types/index.d.ts",
@@ -36,7 +36,7 @@
         "@diia-inhouse/configs": "6.1.1",
         "@diia-inhouse/eslint-config": "8.8.2",
         "@diia-inhouse/eslint-plugin": "1.9.6",
-        "@diia-inhouse/types": "12.0.2",
+        "@diia-inhouse/types": "12.0.4",
         "@diia-inhouse/utils": "5.3.25",
         "@types/lodash": "4.17.24",
         "@vitest/coverage-v8": "4.0.18",
