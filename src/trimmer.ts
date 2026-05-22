@@ -1,12 +1,15 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { isObject } from 'lodash'
+/* oxlint-disable typescript/no-explicit-any */
+import lodash from 'lodash'
 
 import { LoggerOptions } from '@diia-inhouse/types'
 
-import { toInternalLoggerOptions } from './config'
-import { InternalLoggerOptions } from './interfaces'
-import { redactFullName } from './redactors/fullName'
-import { redactItn } from './redactors/itn'
+import { toInternalLoggerOptions } from './config.js'
+import { InternalLoggerOptions } from './interfaces/index.js'
+import { redactFullName } from './redactors/fullName.js'
+import { redactItn } from './redactors/itn.js'
+
+// oxlint-disable-next-line typescript/unbound-method
+const { isObject } = lodash
 
 function trimString(str: string, { maxStringLength, endLengthToLog }: InternalLoggerOptions): string {
     const length = str.length
@@ -115,6 +118,7 @@ const trimWalker = (opts: InternalLoggerOptions, node: any, depth: number, isRed
     return node
 }
 
+// oxlint-disable-next-line oxc/only-used-in-recursion
 const redactionWalker = (opts: InternalLoggerOptions, key: string, value: string | any[], isRedactionDisabled: boolean): string | any[] => {
     if (Array.isArray(value)) {
         return value.map((item) => redactionWalker(opts, key, item, isRedactionDisabled))

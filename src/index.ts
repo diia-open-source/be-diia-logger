@@ -1,15 +1,18 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable typescript/no-explicit-any */
 import { AsyncLocalStorage } from 'node:async_hooks'
 
 import { context, trace } from '@opentelemetry/api'
-import { isObject } from 'lodash'
+import lodash from 'lodash'
 import pino, { DestinationStream, Logger as PinoLogger, stdSerializers } from 'pino'
 
 import { AlsData, LogData, LogLevel, Logger, LoggerOptions } from '@diia-inhouse/types'
 import type * as Utils from '@diia-inhouse/utils'
 
-import { toInternalLoggerOptions } from './config'
-import { trimmer } from './trimmer'
+import { toInternalLoggerOptions } from './config.js'
+import { trimmer } from './trimmer.js'
+
+// oxlint-disable-next-line typescript/unbound-method, @diia-inhouse/class/no-module-level-const
+const { isObject } = lodash
 
 export default class DiiaLogger implements Logger {
     private logger: PinoLogger<'io'>
@@ -17,8 +20,8 @@ export default class DiiaLogger implements Logger {
     private trim: ReturnType<typeof trimmer>
 
     constructor(
-        private readonly options: LoggerOptions = {},
-        private readonly asyncLocalStorage?: AsyncLocalStorage<AlsData>,
+        private readonly options: LoggerOptions | undefined = {},
+        private readonly asyncLocalStorage: AsyncLocalStorage<AlsData> | undefined = undefined,
         destinationStream: DestinationStream | null = null,
         existedLogger: PinoLogger<'io'> | null = null,
     ) {
@@ -108,8 +111,8 @@ export default class DiiaLogger implements Logger {
         this.printMessage('debug', message, data)
     }
 
-    prepareContext(context: LogData): LogData {
-        return this.trim(context)
+    prepareContext(data: LogData): LogData {
+        return this.trim(data)
     }
 
     private printMessage(level: pino.Level, message: string, data: any): void {
@@ -152,6 +155,6 @@ export default class DiiaLogger implements Logger {
 
 export { DiiaLogger }
 
-export { defaultOptions } from './config'
+export { defaultOptions } from './config.js'
 
-export { createTrimmer } from './trimmer'
+export { createTrimmer } from './trimmer.js'

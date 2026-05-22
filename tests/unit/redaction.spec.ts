@@ -3,7 +3,7 @@ import { Writable } from 'node:stream'
 import { LogLevel } from '@diia-inhouse/types'
 import { utils } from '@diia-inhouse/utils'
 
-import DiiaLogger from '../../src/index'
+import { DiiaLogger } from '../../src/index'
 import { redactItn } from '../../src/redactors/itn'
 
 describe('DiiaLogger', () => {
@@ -76,11 +76,11 @@ describe('DiiaLogger', () => {
             {},
             undefined,
             new Writable({
-                write: (chunk: string, _: unknown, cb: () => void): void => {
+                write: (chunk: Buffer, _: unknown, cb: () => void): void => {
                     const loggerResult = chunk.toString().trim()
                     const expected = {
                         level: 'ERROR',
-                        timestamp: `${currentDataIsoString}`,
+                        timestamp: currentDataIsoString,
                         serviceVersion,
                         log: {
                             data: {
@@ -157,7 +157,7 @@ describe('DiiaLogger', () => {
             {},
             undefined,
             new Writable({
-                write: (chunk: string, _: unknown, cb: () => void): void => {
+                write: (chunk: Buffer, _: unknown, cb: () => void): void => {
                     const loggerResult = chunk.toString().trim()
                     const expected = `{"level":"ERROR","timestamp":"${currentDataIsoString}","serviceVersion":"${serviceVersion}","log":{"data":{"itn":"[Redacted]","inn":"","firstName":null}},"msg":"error message"}`
 
@@ -218,7 +218,7 @@ describe('DiiaLogger', () => {
                 {},
                 undefined,
                 new Writable({
-                    write: (chunk: string, _: unknown, cb: () => void): void => {
+                    write: (chunk: Buffer, _: unknown, cb: () => void): void => {
                         const loggerResult = chunk.toString().trim()
                         const expected = `{"level":"ERROR","timestamp":"${currentDataIsoString}","serviceVersion":"${serviceVersion}","log":{"data":${expectedLogData}},"msg":"error message"}`
 
@@ -258,7 +258,7 @@ describe('DiiaLogger', () => {
             {},
             undefined,
             new Writable({
-                write: (chunk: string, _: unknown, cb: () => void): void => {
+                write: (chunk: Buffer, _: unknown, cb: () => void): void => {
                     const loggerResult = chunk.toString().trim()
                     const parsed = JSON.parse(loggerResult)
 
@@ -300,7 +300,7 @@ describe('DiiaLogger', () => {
             { logLevel: LogLevel.DEBUG },
             undefined,
             new Writable({
-                write: (chunk: string, _: unknown, cb: () => void): void => {
+                write: (chunk: Buffer, _: unknown, cb: () => void): void => {
                     const loggerResult = chunk.toString().trim()
                     const expected = `{"level":"DEBUG","timestamp":"${currentDataIsoString}","serviceVersion":"${serviceVersion}","log":{"data":{"value":"раз Шевченко Тарас Григорович два","name":"Головне управління Пенсійного фонду України в Дніпропетровській області","title":"три Шевченко Тарас Григорович-Кобзар чотири"}},"msg":"error message"}`
 

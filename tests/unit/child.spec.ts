@@ -3,7 +3,7 @@ import { Writable } from 'node:stream'
 import { LogLevel, LoggerOptions } from '@diia-inhouse/types'
 import { utils } from '@diia-inhouse/utils'
 
-import DiiaLogger from '../../src/index'
+import { DiiaLogger } from '../../src/index'
 
 const options: LoggerOptions = {
     logLevel: LogLevel.DEBUG,
@@ -33,7 +33,7 @@ describe('DiiaLogger', () => {
             options,
             undefined,
             new Writable({
-                write: (chunk: string, _: unknown, cb: () => void): void => {
+                write: (chunk: Buffer, _: unknown, cb: () => void): void => {
                     const loggerResult = chunk.toString().trim()
                     const expected = `{"level":"INFO","timestamp":"${currentDataIsoString}","childProp":"childValue","serviceVersion":"${serviceVersion}","analytics":{"appVersion":"1.0.10"},"log":{},"msg":"hello"}`
 

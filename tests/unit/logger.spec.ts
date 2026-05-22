@@ -6,7 +6,7 @@ import { SpanContext, TraceFlags, trace } from '@opentelemetry/api'
 import { AlsData, LogLevel, LoggerOptions } from '@diia-inhouse/types'
 import { utils } from '@diia-inhouse/utils'
 
-import DiiaLogger from '../../src/index'
+import { DiiaLogger } from '../../src/index'
 
 const options: LoggerOptions = {
     logLevel: LogLevel.DEBUG,
@@ -36,7 +36,7 @@ describe('DiiaLogger', () => {
             options,
             undefined,
             new Writable({
-                write: (chunk: string, _: unknown, cb: () => void): void => {
+                write: (chunk: Buffer, _: unknown, cb: () => void): void => {
                     const loggerResult = chunk.toString().trim()
                     const expected = `{"level":"INFO","timestamp":"${currentDataIsoString}","serviceVersion":"${serviceVersion}","analytics":{"appVersion":"1.0.10"},"log":{},"msg":"hello"}`
 
@@ -86,7 +86,7 @@ describe('DiiaLogger', () => {
             options,
             undefined,
             new Writable({
-                write: (chunk: string, _: unknown, cb: () => void): void => {
+                write: (chunk: Buffer, _: unknown, cb: () => void): void => {
                     const loggerResult = chunk.toString().trim()
                     const expected = `{"level":"INFO","timestamp":"${currentDataIsoString}","serviceVersion":"${serviceVersion}","log":{"nestedObject":{"key1":{"key11":{"key111":"[Object]"}},"key2":{"key22":{"key222":"[Object]"}},"key3":{"key33":"value 33"},"key4":"value 4"}},"msg":"nested object"}`
 
@@ -113,7 +113,7 @@ describe('DiiaLogger', () => {
             options,
             undefined,
             new Writable({
-                write: (chunk: string, _: unknown, cb: () => void): void => {
+                write: (chunk: Buffer, _: unknown, cb: () => void): void => {
                     const loggerResult = chunk.toString().trim()
                     const expected = `{"level":"INFO","timestamp":"${currentDataIsoString}","serviceVersion":"${serviceVersion}","log":{"date":"${new Date(
                         date,
@@ -140,7 +140,7 @@ describe('DiiaLogger', () => {
             options,
             undefined,
             new Writable({
-                write: (chunk: string, _: unknown, cb: () => void): void => {
+                write: (chunk: Buffer, _: unknown, cb: () => void): void => {
                     const loggerResult = chunk.toString().trim()
                     const expected = `{"level":"INFO","timestamp":"${currentDataIsoString}","serviceVersion":"${serviceVersion}","log":{"arr":[1,2,3,4,{"someObject":{"value":true}}]},"msg":"log with array"}`
 
@@ -155,7 +155,7 @@ describe('DiiaLogger', () => {
     })
 
     it('should write correct logs in case io level is configured', () => {
-        const write = vi.fn()
+        const write = vi.fn<(chunk: Buffer, _: unknown, cb: () => void) => void>()
         const currentDate = Date.now()
         const currentDataIsoString = new Date(currentDate).toISOString()
         const logger = new DiiaLogger(
@@ -168,7 +168,7 @@ describe('DiiaLogger', () => {
         const expectedLogLevelsToBeShown = [LogLevel.INFO, LogLevel.ERROR, LogLevel.FATAL, LogLevel.WARN, LogLevel.IO]
 
         for (const logLevel of expectedLogLevelsToBeShown) {
-            write.mockImplementationOnce((chunk: string, _: unknown, cb: () => void) => {
+            write.mockImplementationOnce((chunk: Buffer, _: unknown, cb: () => void) => {
                 const loggerResult = chunk.toString().trim()
                 const expected = `{"level":"${logLevel.toUpperCase()}","timestamp":"${currentDataIsoString}","serviceVersion":"${serviceVersion}","analytics":{"appVersion":"1.0.10"},"log":{},"msg":"${logLevel}"}`
 
@@ -204,7 +204,7 @@ describe('DiiaLogger', () => {
                 options,
                 undefined,
                 new Writable({
-                    write: (chunk: string, _: unknown, cb: () => void): void => {
+                    write: (chunk: Buffer, _: unknown, cb: () => void): void => {
                         const parsed = JSON.parse(chunk.toString().trim())
 
                         expect(parsed.headers).toEqual({ spanId: 'b7ad6b7169203331' })
@@ -228,7 +228,7 @@ describe('DiiaLogger', () => {
                 options,
                 asyncLocalStorage,
                 new Writable({
-                    write: (chunk: string, _: unknown, cb: () => void): void => {
+                    write: (chunk: Buffer, _: unknown, cb: () => void): void => {
                         const parsed = JSON.parse(chunk.toString().trim())
 
                         expect(parsed.headers).toEqual({
@@ -254,7 +254,7 @@ describe('DiiaLogger', () => {
                 options,
                 undefined,
                 new Writable({
-                    write: (chunk: string, _: unknown, cb: () => void): void => {
+                    write: (chunk: Buffer, _: unknown, cb: () => void): void => {
                         const parsed = JSON.parse(chunk.toString().trim())
 
                         expect(parsed).not.toHaveProperty('headers')

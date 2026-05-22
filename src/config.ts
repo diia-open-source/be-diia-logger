@@ -1,10 +1,13 @@
-import { merge } from 'lodash'
+import lodash from 'lodash'
 
 import { LogLevel, LoggerOptions } from '@diia-inhouse/types'
 
-import { InternalLoggerOptions } from './interfaces'
+import { InternalLoggerOptions } from './interfaces/index.js'
 
-export const defaultOptions = {
+// oxlint-disable-next-line typescript/unbound-method
+const { merge } = lodash
+
+export const defaultOptions: LoggerOptions = {
     logLevel: LogLevel.INFO,
     maxArrayLength: 100,
     maxStringLength: 255,
@@ -139,7 +142,7 @@ export const defaultOptions = {
         ],
         fieldsToRedactItn: ['label', 'paymentPurpose', 'subject', 'value'],
     },
-} satisfies LoggerOptions
+}
 
 export const toInternalLoggerOptions = (options: LoggerOptions = {}): InternalLoggerOptions => {
     const merged = merge({}, defaultOptions, options)
