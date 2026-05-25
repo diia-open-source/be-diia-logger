@@ -1,6 +1,5 @@
 import { Writable } from 'node:stream'
 
-import { LogLevel } from '@diia-inhouse/types'
 import { utils } from '@diia-inhouse/utils'
 
 import { DiiaLogger } from '../../src/index'
@@ -283,7 +282,7 @@ describe('DiiaLogger', () => {
         logger.error('error message', { data })
     })
 
-    it('should not redact values if log level is debug or below', () => {
+    it('should not redact values if redactDisabled option is true', () => {
         const currentDate = Date.now()
         const currentDataIsoString = new Date(currentDate).toISOString()
 
@@ -297,12 +296,12 @@ describe('DiiaLogger', () => {
 
         expect.assertions(1)
         const logger = new DiiaLogger(
-            { logLevel: LogLevel.DEBUG },
+            { redactDisabled: true },
             undefined,
             new Writable({
                 write: (chunk: Buffer, _: unknown, cb: () => void): void => {
                     const loggerResult = chunk.toString().trim()
-                    const expected = `{"level":"DEBUG","timestamp":"${currentDataIsoString}","serviceVersion":"${serviceVersion}","log":{"data":{"value":"раз Шевченко Тарас Григорович два","name":"Головне управління Пенсійного фонду України в Дніпропетровській області","title":"три Шевченко Тарас Григорович-Кобзар чотири"}},"msg":"error message"}`
+                    const expected = `{"level":"ERROR","timestamp":"${currentDataIsoString}","serviceVersion":"${serviceVersion}","log":{"data":{"value":"раз Шевченко Тарас Григорович два","name":"Головне управління Пенсійного фонду України в Дніпропетровській області","title":"три Шевченко Тарас Григорович-Кобзар чотири"}},"msg":"error message"}`
 
                     expect(loggerResult).toBe(expected)
 
@@ -311,7 +310,7 @@ describe('DiiaLogger', () => {
             }),
         )
 
-        logger.debug('error message', { data })
+        logger.error('error message', { data })
     })
 
     describe('redaction of itn', () => {

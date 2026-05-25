@@ -10,6 +10,7 @@ describe('trimmer', () => {
         maxObjectDepth: 2,
         maxArrayLength: 4,
         maxObjectBreadth: 20,
+        redactDisabled: false,
         redact: {
             fields: new Set(['password']),
             paths: new Set(),
@@ -20,14 +21,14 @@ describe('trimmer', () => {
     }
 
     it('should return error as is', () => {
-        const trim = trimmer(opts, false)
+        const trim = trimmer(opts)
         const input = new Error('message')
 
         expect(trim(input)).toEqual(input)
     })
 
     it('should not treat plain objects with ObjectId-like id as ObjectId', () => {
-        const trim = trimmer(opts, false)
+        const trim = trimmer(opts)
         const params = { id: '507f1f77bcf86cd799439011', bucket: 'diia-private' }
 
         const result = trim(params)
@@ -39,7 +40,7 @@ describe('trimmer', () => {
     })
 
     it('should trim and redact sensitive information from objects', () => {
-        const trim = trimmer(opts, false)
+        const trim = trimmer(opts)
 
         const obj = {
             name: 'name',

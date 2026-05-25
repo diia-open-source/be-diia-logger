@@ -21,7 +21,7 @@ function trimString(str: string, { maxStringLength, endLengthToLog }: InternalLo
     return truncatedString
 }
 
-function trimObject(opts: InternalLoggerOptions, node: object, depth: number, isRedactionDisabled: boolean): object {
+function trimObject(opts: InternalLoggerOptions, node: object, depth: number): object {
     const propertiesCount = Object.keys(node).length
     if (propertiesCount > opts.maxObjectBreadth) {
         const visibleObjectProperties = Object.entries(node).slice(0, opts.maxObjectBreadth)
@@ -36,8 +36,8 @@ function trimObject(opts: InternalLoggerOptions, node: object, depth: number, is
         const output: Record<string, any> = Array.isArray(node) ? [] : {}
 
         for (const [key, value] of Object.entries(node)) {
-            if (isRedactionDisabled) {
-                output[key] = trimWalker(opts, value, depth + 1, isRedactionDisabled)
+            if (opts.redactDisabled) {
+                output[key] = trimWalker(opts, value, depth + 1)
                 continue
             }
 
@@ -51,15 +51,15 @@ function trimObject(opts: InternalLoggerOptions, node: object, depth: number, is
                 continue
             }
 
-            output[key] = trimWalker(opts, value, depth + 1, isRedactionDisabled)
+            output[key] = trimWalker(opts, value, depth + 1)
 
             if (typeof value === 'string' || Array.isArray(value)) {
                 if (opts.redact.fieldsToRedactFullname?.has(key)) {
-                    output[key] = redactionWalker(opts, key, output[key], isRedactionDisabled)
+                    output[key] = redactionWalker(opts, key, output[key])
                 }
 
                 if (opts.redact.fieldsToRedactItn?.has(key)) {
-                    output[key] = redactionWalker(opts, key, output[key], isRedactionDisabled)
+                    output[key] = redactionWalker(opts, key, output[key])
                 }
 
                 continue
@@ -72,7 +72,7 @@ function trimObject(opts: InternalLoggerOptions, node: object, depth: number, is
     return node
 }
 
-const trimWalker = (opts: InternalLoggerOptions, node: any, depth: number, isRedactionDisabled: boolean): any => {
+const trimWalker = (opts: InternalLoggerOptions, node: any, depth: number): any => {
     if (node instanceof Error) {
         return node
     }
@@ -112,16 +112,15 @@ const trimWalker = (opts: InternalLoggerOptions, node: any, depth: number, isRed
     }
 
     if (isObject(node)) {
-        return trimObject(opts, node, depth, isRedactionDisabled)
+        return trimObject(opts, node, depth)
     }
 
     return node
 }
 
-// oxlint-disable-next-line oxc/only-used-in-recursion
-const redactionWalker = (opts: InternalLoggerOptions, key: string, value: string | any[], isRedactionDisabled: boolean): string | any[] => {
+const redactionWalker = (opts: InternalLoggerOptions, key: string, value: string | any[]): string | any[] => {
     if (Array.isArray(value)) {
-        return value.map((item) => redactionWalker(opts, key, item, isRedactionDisabled))
+        return value.map((item) => redactionWalker(opts, key, item))
     }
 
     if (typeof value !== 'string') {
@@ -139,15 +138,14 @@ const redactionWalker = (opts: InternalLoggerOptions, key: string, value: string
     return value
 }
 
-export const trimmer = (opts: InternalLoggerOptions, isRedactionDisabled: boolean): ((i: unknown) => any) => {
+export const trimmer = (opts: InternalLoggerOptions): ((i: unknown) => any) => {
     return (input: unknown): any => {
         try {
-            return trimWalker(opts, input, 0, isRedactionDisabled)
+            return trimWalker(opts, input, 0)
         } catch (err) {
             return { err, msg: 'Failed to trim logger input' }
         }
     }
 }
 
-export const createTrimmer = (options: LoggerOptions = {}, isRedactionDisabled = false): ((i: unknown) => any) =>
-    trimmer(toInternalLoggerOptions(options), isRedactionDisabled)
+export const createTrimmer = (options: LoggerOptions = {}): ((i: unknown) => any) => trimmer(toInternalLoggerOptions(options))

@@ -70,7 +70,7 @@ export default class DiiaLogger implements Logger {
                 destinationStream || undefined,
             )
 
-        this.trim = trimmer(internalOptions, this.logger.isLevelEnabled(LogLevel.DEBUG))
+        this.trim = trimmer(internalOptions)
     }
 
     child(bindings: Record<string, unknown>, destinationStream?: DestinationStream): Logger {
