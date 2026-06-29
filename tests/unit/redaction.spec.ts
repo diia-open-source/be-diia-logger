@@ -40,11 +40,11 @@ describe('DiiaLogger', () => {
             birthDay: '01.01.2020',
             fio: 'Last First Middle',
             passport: 'Passport',
-            phone: '+38099123456789',
+            phone: '+380991234567',
             address: 'Kyiv',
             birthplace: 'Kyiv',
             fullName: 'Last First',
-            phoneNumber: '+38099123456789',
+            phoneNumber: '+380991234567',
             requestorJWE: token,
             consumerJWE: token,
             refreshToken: {
@@ -91,17 +91,17 @@ describe('DiiaLogger', () => {
                                 middleName: '[Redacted]',
                                 passportSeries: '[Redacted]',
                                 passportNumber: '[Redacted]',
-                                email: '[Redacted]',
+                                email: 't***@test.ua',
                                 addressOfRegistration: '[Redacted]',
                                 addressOfBirth: '[Redacted]',
                                 birthDay: '[Redacted]',
                                 fio: '[Redacted]',
                                 passport: '[Redacted]',
-                                phone: '[Redacted]',
+                                phone: '+38099******7',
                                 address: '[Redacted]',
                                 birthplace: '[Redacted]',
                                 fullName: '[Redacted]',
-                                phoneNumber: '[Redacted]',
+                                phoneNumber: '+38099******7',
                                 requestorJWE: 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjoiZXlKbGJtTWlPaUpCTVRJNFEwSkRMVWhUTWpVMklp',
                                 consumerJWE: 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjoiZXlKbGJtTWlPaUpCTVRJNFEwSkRMVWhUTWpVMklp',
                                 refreshToken: '[Redacted]',
@@ -202,6 +202,13 @@ describe('DiiaLogger', () => {
                 },
                 expectedLogData:
                     '{"label":["[Fullname redacted: Ш.Т.Г.] рнокпп: 12[...itn redacted...]90","[Fullname redacted: Ш.Т.Г.] ","valid text","12[...itn redacted...]90"]}',
+            },
+            {
+                message: 'should partially redact email and phone embedded in free-text fields',
+                inputData: {
+                    value: 'звернення a@b.com, тел +380991234567',
+                },
+                expectedLogData: '{"value":"звернення ***@b.com, тел +38099******7"}',
             },
         ]
 

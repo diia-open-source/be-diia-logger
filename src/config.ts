@@ -7,6 +7,8 @@ import { InternalLoggerOptions } from './interfaces/index.js'
 // oxlint-disable-next-line typescript/unbound-method
 const { merge } = lodash
 
+const freeTextFields = ['value', 'text', 'textItems', 'label', 'shortText', 'accessibilityDescription']
+
 export const defaultOptions: LoggerOptions = {
     logLevel: LogLevel.INFO,
     maxArrayLength: 100,
@@ -33,7 +35,6 @@ export const defaultOptions: LoggerOptions = {
             'patronymic_name',
             'passportSeries',
             'passportNumber',
-            'email',
             'addressOfRegistration',
             'addressOfBirth',
             'birthDay',
@@ -41,13 +42,10 @@ export const defaultOptions: LoggerOptions = {
             'date_birth',
             'fio',
             'passport',
-            'phone',
             'address',
             'birthplace',
             'fullName',
             'full_name',
-            'phoneNumber',
-            'extraPhoneNumber',
             'refreshToken',
             'token',
             'fName',
@@ -101,11 +99,8 @@ export const defaultOptions: LoggerOptions = {
             'partnerFullName',
             'residenceAddress',
             'displayName',
-            'personalPhone',
             'content',
             'subjAddress',
-            'subjPhone',
-            'subjEmail',
             'subjDrfoCode',
             'oldLastName',
             'oldFirstName',
@@ -141,6 +136,8 @@ export const defaultOptions: LoggerOptions = {
             'documents',
         ],
         fieldsToRedactItn: ['label', 'paymentPurpose', 'subject', 'value'],
+        fieldsToRedactEmail: ['email', 'subjEmail', ...freeTextFields],
+        fieldsToRedactPhone: ['phone', 'phoneNumber', 'extraPhoneNumber', 'personalPhone', 'subjPhone', ...freeTextFields],
     },
 }
 
@@ -155,6 +152,14 @@ export const toInternalLoggerOptions = (options: LoggerOptions = {}): InternalLo
             paths: new Set(redact.paths),
             fieldsToRedactFullname: new Set(redact.fieldsToRedactFullname),
             fieldsToRedactItn: new Set(redact.fieldsToRedactItn),
+            fieldsToRedactEmail: new Set(redact.fieldsToRedactEmail),
+            fieldsToRedactPhone: new Set(redact.fieldsToRedactPhone),
+            fieldsToScan: new Set([
+                ...(redact.fieldsToRedactFullname || []),
+                ...(redact.fieldsToRedactItn || []),
+                ...(redact.fieldsToRedactEmail || []),
+                ...(redact.fieldsToRedactPhone || []),
+            ]),
         },
     }
 }

@@ -6,5 +6,8 @@ export interface InternalLoggerOptions extends Required<Omit<LoggerOptions, 'red
         paths: Set<string>
         fieldsToRedactFullname: Set<string>
         fieldsToRedactItn: Set<string>
+        fieldsToRedactEmail: Set<string>
+        fieldsToRedactPhone: Set<string>
+        fieldsToScan: Set<string>
     }
 }

@@ -16,6 +16,9 @@ describe('trimmer', () => {
             paths: new Set(),
             fieldsToRedactFullname: new Set(),
             fieldsToRedactItn: new Set(),
+            fieldsToRedactEmail: new Set(),
+            fieldsToRedactPhone: new Set(),
+            fieldsToScan: new Set(),
         },
         endLengthToLog: 5,
     }

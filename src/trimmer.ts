@@ -5,8 +5,10 @@ import { LoggerOptions } from '@diia-inhouse/types'
 
 import { toInternalLoggerOptions } from './config.js'
 import { InternalLoggerOptions } from './interfaces/index.js'
+import { redactEmail } from './redactors/email.js'
 import { redactFullName } from './redactors/fullName.js'
 import { redactItn } from './redactors/itn.js'
+import { redactPhone } from './redactors/phone.js'
 
 // oxlint-disable-next-line typescript/unbound-method
 const { isObject } = lodash
@@ -54,11 +56,7 @@ function trimObject(opts: InternalLoggerOptions, node: object, depth: number): o
             output[key] = trimWalker(opts, value, depth + 1)
 
             if (typeof value === 'string' || Array.isArray(value)) {
-                if (opts.redact.fieldsToRedactFullname?.has(key)) {
-                    output[key] = redactionWalker(opts, key, output[key])
-                }
-
-                if (opts.redact.fieldsToRedactItn?.has(key)) {
+                if (opts.redact.fieldsToScan.has(key)) {
                     output[key] = redactionWalker(opts, key, output[key])
                 }
 
@@ -133,6 +131,14 @@ const redactionWalker = (opts: InternalLoggerOptions, key: string, value: string
 
     if (opts.redact.fieldsToRedactItn?.has(key)) {
         value = redactItn(value)
+    }
+
+    if (opts.redact.fieldsToRedactEmail?.has(key)) {
+        value = redactEmail(value)
+    }
+
+    if (opts.redact.fieldsToRedactPhone?.has(key)) {
+        value = redactPhone(value)
     }
 
     return value
