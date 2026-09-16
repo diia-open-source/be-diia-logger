@@ -1,6 +1,6 @@
 {
     "name": "@diia-inhouse/diia-logger",
-    "version": "4.4.71",
+    "version": "4.4.72",
     "type": "module",
     "description": "Logger package",
     "main": "dist/index.js",
@@ -43,7 +43,7 @@
     "devDependencies": {
         "@diia-inhouse/configs": "7.2.1",
         "@diia-inhouse/eslint-plugin": "1.9.11",
-        "@diia-inhouse/oxc-config": "2.1.6",
+        "@diia-inhouse/oxc-config": "2.1.7",
         "@diia-inhouse/types": "14.2.10",
         "@diia-inhouse/utils": "6.1.6",
         "@types/lodash": "4.17.24",
