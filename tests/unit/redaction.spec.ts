@@ -210,6 +210,13 @@ describe('DiiaLogger', () => {
                 },
                 expectedLogData: '{"value":"звернення ***@b.com, тел +38099******7"}',
             },
+            {
+                message: 'should partially redact foreign phone number',
+                inputData: {
+                    phoneNumber: '48537163208',
+                },
+                expectedLogData: '{"phoneNumber":"4853******8"}',
+            },
         ]
 
         it.each(cases)('$message', async (params) => {

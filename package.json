@@ -1,6 +1,6 @@
 {
     "name": "@diia-inhouse/diia-logger",
-    "version": "4.5.8",
+    "version": "4.6.0",
     "type": "module",
     "description": "Logger package",
     "main": "dist/index.js",

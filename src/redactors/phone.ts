@@ -2,8 +2,8 @@
 // parentheses, dots and dashes. Validated by digit count in maskPhone.
 const PHONE_CANDIDATE = /\+?\d[\d\s().-]{7,18}\d/g
 
-const nationalDigits = 10
-const internationalDigits = 12
+const minDigits = 10
+const maxDigits = 15
 const subscriberDigits = 7
 
 export function redactPhone(text: string): string {
@@ -12,9 +12,7 @@ export function redactPhone(text: string): string {
 
 function maskPhone(match: string): string {
     const digits = match.replace(/\D/g, '')
-    const isNational = digits.length === nationalDigits && digits.startsWith('0')
-    const isInternational = digits.length === internationalDigits
-    if (!isNational && !isInternational) {
+    if (digits.length < minDigits || digits.length > maxDigits) {
         return match
     }
 
