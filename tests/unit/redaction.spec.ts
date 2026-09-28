@@ -193,7 +193,7 @@ describe('DiiaLogger', () => {
                 inputData: {
                     label: 'Шевченко Тарас Григорович, рнокпп: 1234567890',
                 },
-                expectedLogData: '{"label":"[Fullname redacted: Ш.Т.Г.] рнокпп: 12[...itn redacted...]90"}',
+                expectedLogData: '{"label":"[Fullname redacted: Ш.Т.Г.], рнокпп: 12[...itn redacted...]90"}',
             },
             {
                 message: 'should apply full name and itn redaction on the same array of strings field',
@@ -201,7 +201,7 @@ describe('DiiaLogger', () => {
                     label: ['Шевченко Тарас Григорович, рнокпп: 1234567890', 'Шевченко Тарас Григорович', 'valid text', '1234567890'],
                 },
                 expectedLogData:
-                    '{"label":["[Fullname redacted: Ш.Т.Г.] рнокпп: 12[...itn redacted...]90","[Fullname redacted: Ш.Т.Г.] ","valid text","12[...itn redacted...]90"]}',
+                    '{"label":["[Fullname redacted: Ш.Т.Г.], рнокпп: 12[...itn redacted...]90","[Fullname redacted: Ш.Т.Г.]","valid text","12[...itn redacted...]90"]}',
             },
             {
                 message: 'should partially redact email and phone embedded in free-text fields',

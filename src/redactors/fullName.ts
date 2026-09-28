@@ -1,28 +1,69 @@
-function checkIsLowercaseLetter(char: string | undefined): boolean {
-    const code = char?.codePointAt(0)
-    if (code === undefined) {
+const minParts = 2
+const maxParts = 6
+
+const nameSeparators = new Set(["'", '’', '-'])
+
+function isCasedLetter(char: string): boolean {
+    return char.toLowerCase() !== char.toUpperCase()
+}
+
+function isUpperCaseLetter(char: string): boolean {
+    return isCasedLetter(char) && char === char.toUpperCase()
+}
+
+function isLowerCaseLetter(char: string): boolean {
+    return isCasedLetter(char) && char === char.toLowerCase()
+}
+
+function isNameChar(char: string): boolean {
+    return isCasedLetter(char) || nameSeparators.has(char)
+}
+
+function splitSegments(word: string): string[] {
+    const segments: string[] = []
+    let current = ''
+
+    for (const char of word) {
+        if (nameSeparators.has(char)) {
+            segments.push(current)
+            current = ''
+        } else {
+            current += char
+        }
+    }
+
+    segments.push(current)
+
+    return segments
+}
+
+function isTitleCaseSegment(segment: string): boolean {
+    if (!isUpperCaseLetter(segment[0])) {
         return false
     }
 
-    const isLatin = code >= 97 && code <= 122 // a-z
-    if (isLatin) {
-        return true
+    for (let i = 1; i < segment.length; i++) {
+        if (!isLowerCaseLetter(segment[i])) {
+            return false
+        }
     }
 
-    const isUkrainian =
-        (code >= 0x04_30 && code <= 0x04_4f) || // а-я
-        code === 0x04_54 || // є
-        code === 0x04_56 || // і
-        code === 0x04_57 || // ї
-        code === 0x04_91 // ґ
+    return true
+}
 
-    return isUkrainian
+function isUpperCaseSegment(segment: string): boolean {
+    for (const char of segment) {
+        if (!isUpperCaseLetter(char)) {
+            return false
+        }
+    }
+
+    return true
 }
 
 function findNextWordBoundary(text: string, startIndex: number): number {
     for (let i = startIndex; i < text.length; i++) {
-        const char = text[i]
-        if (char === ' ') {
+        if (!isNameChar(text[i])) {
             return i
         }
     }
@@ -30,35 +71,25 @@ function findNextWordBoundary(text: string, startIndex: number): number {
     return text.length
 }
 
-function isUpperCase(char: string | undefined): boolean {
-    const isLetter = checkIsLowercaseLetter(char?.toLowerCase())
-
-    return isLetter && char === char?.toUpperCase()
-}
-
-function isNamePart(word: string | undefined): boolean {
-    if (!isUpperCase(word?.[0])) {
+function isNamePart(word: string): boolean {
+    if (word.length < 2) {
         return false
     }
 
-    let prevChar
-    for (let i = 1; i < (word?.length || 0); i++) {
-        const char = word?.[i]
-        if (checkIsLowercaseLetter(char) || char === '-' || (prevChar === '-' && checkIsLowercaseLetter(char?.toLowerCase()))) {
-            return true
-        }
-
-        prevChar = char
+    const segments = splitSegments(word)
+    if (segments.some((segment) => segment === '')) {
+        return false
     }
 
-    return false
+    return segments.every((segment) => isTitleCaseSegment(segment)) || segments.every((segment) => isUpperCaseSegment(segment))
 }
 
 function extractFullName(text: string, startIndex: number): [string | undefined, number] {
     const parts: string[] = []
     let currentIndex = startIndex
+    let endIndex = startIndex
 
-    while (currentIndex < text.length) {
+    while (currentIndex < text.length && parts.length < maxParts) {
         const wordEnd = findNextWordBoundary(text, currentIndex)
         const word = text.slice(currentIndex, wordEnd)
 
@@ -67,22 +98,17 @@ function extractFullName(text: string, startIndex: number): [string | undefined,
         }
 
         parts.push(word)
+        endIndex = wordEnd
 
-        currentIndex = wordEnd
-
-        if (currentIndex < text.length && text[currentIndex] === ' ') {
-            if (parts.length >= 6) {
-                break
-            }
-
-            currentIndex++
-        } else {
+        if (text[wordEnd] !== ' ') {
             break
         }
+
+        currentIndex = wordEnd + 1
     }
 
-    if (parts.length >= 2 && parts.length <= 6) {
-        return [parts.join(' '), currentIndex]
+    if (parts.length >= minParts) {
+        return [parts.join(' '), endIndex]
     }
 
     return [undefined, startIndex]
@@ -90,8 +116,8 @@ function extractFullName(text: string, startIndex: number): [string | undefined,
 
 function nameToInitials(fullName: string): string {
     return fullName
-        .split(/\s/)
-        .map((part) => `${part.split('-')[0][0]}.`)
+        .split(' ')
+        .map((part) => `${splitSegments(part)[0][0]}.`)
         .join('')
 }
 
@@ -100,14 +126,11 @@ export function redactFullName(text: string): string {
     let currentIndex = 0
 
     while (currentIndex < text.length) {
-        const currentChar = text[currentIndex]
-        if (isUpperCase(currentChar)) {
+        if (isUpperCaseLetter(text[currentIndex])) {
             const [fullName, endIndex] = extractFullName(text, currentIndex)
 
             if (fullName) {
-                const initials = nameToInitials(fullName)
-
-                result += `[Fullname redacted: ${initials}] `
+                result += `[Fullname redacted: ${nameToInitials(fullName)}]`
                 currentIndex = endIndex
                 continue
             }
