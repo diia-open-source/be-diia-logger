@@ -1,6 +1,6 @@
 {
     "name": "@diia-inhouse/diia-logger",
-    "version": "4.7.27",
+    "version": "4.7.28",
     "description": "Logger package",
     "license": "SEE LICENSE IN LICENSE.md",
     "author": "diia-team",
@@ -38,10 +38,10 @@
         "pino-pretty": "13.1.3"
     },
     "devDependencies": {
-        "@diia-inhouse/configs": "7.2.2",
-        "@diia-inhouse/eslint-plugin": "1.9.13",
+        "@diia-inhouse/configs": "7.2.3",
+        "@diia-inhouse/eslint-plugin": "1.9.14",
         "@diia-inhouse/oxc-config": "5.0.2",
-        "@diia-inhouse/types": "14.7.2",
+        "@diia-inhouse/types": "14.9.1",
         "@diia-inhouse/utils": "6.1.34",
         "@types/lodash": "4.17.24",
         "@vitest/coverage-v8": "4.1.11",
