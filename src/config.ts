@@ -102,6 +102,7 @@ export const defaultOptions: LoggerOptions = {
             'vault',
             'appPartnerId',
             'partnerToken',
+            'bearerToken',
             'partnerFullName',
             'residenceAddress',
             'displayName',

@@ -47,6 +47,7 @@ describe('DiiaLogger', () => {
             phoneNumber: '+380991234567',
             requestorJWE: token,
             consumerJWE: token,
+            bearerToken: token,
             refreshToken: {
                 value: token,
             },
@@ -104,6 +105,7 @@ describe('DiiaLogger', () => {
                                 phoneNumber: '+38099******7',
                                 requestorJWE: 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjoiZXlKbGJtTWlPaUpCTVRJNFEwSkRMVWhUTWpVMklp',
                                 consumerJWE: 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjoiZXlKbGJtTWlPaUpCTVRJNFEwSkRMVWhUTWpVMklp',
+                                bearerToken: '[Redacted]',
                                 refreshToken: '[Redacted]',
                                 token: '[Redacted]',
                                 driverLicense: [
