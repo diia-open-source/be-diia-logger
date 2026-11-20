@@ -1,7 +1,9 @@
 const minParts = 2
 const maxParts = 6
 
-const nameSeparators = new Set(["'", '’', '-'])
+const nameSeparators = new Set(["'", '’', 'ʼ', '`', '‘', '-'])
+const inWordApostrophePattern = /['’ʼ`‘](?=[яюєї])/g
+const initialsPattern = / *(?<!\p{L})\p{Lu}\.(?: *\p{Lu}\.){1,2} */uy
 
 function isCasedLetter(char: string): boolean {
     return char.toLowerCase() !== char.toUpperCase()
@@ -15,8 +17,11 @@ function isLowerCaseLetter(char: string): boolean {
     return isCasedLetter(char) && char === char.toLowerCase()
 }
 
-function isNameChar(char: string): boolean {
-    return isCasedLetter(char) || nameSeparators.has(char)
+function isNameChar(text: string, index: number): boolean {
+    const char = text[index]
+    const isClosingQuote = char !== '-' && !isCasedLetter(text.charAt(index + 1))
+
+    return isCasedLetter(char) || (nameSeparators.has(char) && !isClosingQuote)
 }
 
 function splitSegments(word: string): string[] {
@@ -63,7 +68,7 @@ function isUpperCaseSegment(segment: string): boolean {
 
 function findNextWordBoundary(text: string, startIndex: number): number {
     for (let i = startIndex; i < text.length; i++) {
-        if (!isNameChar(text[i])) {
+        if (!isNameChar(text, i)) {
             return i
         }
     }
@@ -76,12 +81,38 @@ function isNamePart(word: string): boolean {
         return false
     }
 
-    const segments = splitSegments(word)
+    const segments = splitSegments(word.replace(inWordApostrophePattern, ''))
     if (segments.some((segment) => segment === '')) {
         return false
     }
 
     return segments.every((segment) => isTitleCaseSegment(segment)) || segments.every((segment) => isUpperCaseSegment(segment))
+}
+
+function readNamePart(text: string, startIndex: number): string {
+    const word = text.slice(startIndex, findNextWordBoundary(text, startIndex))
+
+    return isNamePart(word) ? word : ''
+}
+
+function extractNameWithInitials(text: string, startIndex: number): [string | undefined, number] {
+    const leadingWord = readNamePart(text, startIndex)
+
+    initialsPattern.lastIndex = startIndex + leadingWord.length
+
+    const initials = initialsPattern.exec(text)?.[0]
+    if (!initials) {
+        return [undefined, startIndex]
+    }
+
+    const trailingWord = readNamePart(text, initialsPattern.lastIndex)
+    if (!leadingWord && !trailingWord) {
+        return [undefined, startIndex]
+    }
+
+    const fullName = `${leadingWord}${initials}${trailingWord}`.trimEnd()
+
+    return [fullName, startIndex + fullName.length]
 }
 
 function extractFullName(text: string, startIndex: number): [string | undefined, number] {
@@ -111,12 +142,13 @@ function extractFullName(text: string, startIndex: number): [string | undefined,
         return [parts.join(' '), endIndex]
     }
 
-    return [undefined, startIndex]
+    return extractNameWithInitials(text, startIndex)
 }
 
 function nameToInitials(fullName: string): string {
     return fullName
-        .split(' ')
+        .split(/[ .]+/)
+        .filter(Boolean)
         .map((part) => `${splitSegments(part)[0][0]}.`)
         .join('')
 }

@@ -46,6 +46,53 @@ describe('redactFullName', () => {
         })
     })
 
+    describe('names with an apostrophe', () => {
+        const cases = [
+            { input: "Шевченко В'ячеслав Тарасович", expected: '[Fullname redacted: Ш.В.Т.]' },
+            { input: 'Шевченко В’ячеслав Тарасович', expected: '[Fullname redacted: Ш.В.Т.]' },
+            { input: 'Шевченко Вʼячеслав Тарасович', expected: '[Fullname redacted: Ш.В.Т.]' },
+            { input: 'Шевченко В`ячеслав Тарасович', expected: '[Fullname redacted: Ш.В.Т.]' },
+            { input: 'Шевченко В‘ячеслав Тарасович', expected: '[Fullname redacted: Ш.В.Т.]' },
+            { input: "Солов'яненко Мар'яна Валер'янівна", expected: '[Fullname redacted: С.М.В.]' },
+            { input: "Шевченко Дар'я Петрівна", expected: '[Fullname redacted: Ш.Д.П.]' },
+            { input: 'Шевченко Дарʼя Тарасівна', expected: '[Fullname redacted: Ш.Д.Т.]' },
+            { input: "Шевченко Дар'ї Петрівни", expected: '[Fullname redacted: Ш.Д.П.]' },
+            { input: "Шевченко Дар'ю Петрівну", expected: '[Fullname redacted: Ш.Д.П.]' },
+            { input: "Дар'є Петрівно", expected: '[Fullname redacted: Д.П.]' },
+            { input: "П'ЯТНИЧУК ДЕМ'ЯН", expected: '[Fullname redacted: П.Д.]' },
+            { input: "'Шевченко Тарас'", expected: "'[Fullname redacted: Ш.Т.]'" },
+            { input: '`Шевченко Тарас`', expected: '`[Fullname redacted: Ш.Т.]`' },
+        ]
+
+        it.each(cases)('redacts "$input"', ({ input, expected }) => {
+            expect(redactFullName(input)).toBe(expected)
+        })
+    })
+
+    describe('names with initials', () => {
+        const cases = [
+            { input: 'Шевченко Т.Г.', expected: '[Fullname redacted: Ш.Т.Г.]' },
+            { input: 'Шевченко Т. Г.', expected: '[Fullname redacted: Ш.Т.Г.]' },
+            { input: 'ШЕВЧЕНКО Т.Г.', expected: '[Fullname redacted: Ш.Т.Г.]' },
+            { input: 'Т.Г. Шевченко', expected: '[Fullname redacted: Т.Г.Ш.]' },
+            { input: 'Т.Г.Шевченко', expected: '[Fullname redacted: Т.Г.Ш.]' },
+            { input: 'J.R.R. Tolkien', expected: '[Fullname redacted: J.R.R.T.]' },
+            { input: 'ТЦК та СП. Т.Г. Шевченко', expected: 'ТЦК та СП. [Fullname redacted: Т.Г.Ш.]' },
+            {
+                input: 'позов Шевченко Т. Г. до Полтавського районного ТЦК та СП',
+                expected: 'позов [Fullname redacted: Ш.Т.Г.] до Полтавського районного ТЦК та СП',
+            },
+            {
+                input: "Солов'яненко  М.В.   до  Золочівського  районного  ТЦК",
+                expected: '[Fullname redacted: С.М.В.]   до  Золочівського  районного  ТЦК',
+            },
+        ]
+
+        it.each(cases)('redacts "$input"', ({ input, expected }) => {
+            expect(redactFullName(input)).toBe(expected)
+        })
+    })
+
     describe('surrounding text', () => {
         const cases = [
             { input: 'Шевченко Тарас Григорович, рнокпп: 1234567890', expected: '[Fullname redacted: Ш.Т.Г.], рнокпп: 1234567890' },
@@ -67,6 +114,11 @@ describe('redactFullName', () => {
             'IPhone12 Pro',
             'UA213223130000026007233566001',
             'BACK-1234 ready',
+            'Using SHA-256 hash',
+            "Kyiv's Office",
+            'Додаток А. Перелік документів',
+            '21050, м. Вінниця, вул. Грушевського, 17',
+            '[Fullname redacted: Ш.Т.Г.]',
             '',
         ]
 
