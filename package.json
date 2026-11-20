@@ -1,6 +1,6 @@
 {
     "name": "@diia-inhouse/diia-logger",
-    "version": "4.7.58",
+    "version": "4.7.59",
     "description": "Logger package",
     "license": "SEE LICENSE IN LICENSE.md",
     "author": "diia-team",
@@ -20,7 +20,7 @@
         "./package.json": "./package.json"
     },
     "scripts": {
-        "build": "rimraf dist/ && tsdown",
+        "build": "tsdown",
         "prepare": "npm run build",
         "lint": "oxlint && oxfmt --check .",
         "lint-fix": "oxlint --fix && oxfmt .",
@@ -48,7 +48,6 @@
         "oxfmt": "0.72.0",
         "oxlint": "1.87.0",
         "oxlint-tsgolint": "7.0.2003",
-        "rimraf": "6.1.3",
         "semantic-release": "25.0.3",
         "tsdown": "0.22.0",
         "type-fest": "5.6.0",
