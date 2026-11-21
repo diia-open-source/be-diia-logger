@@ -1,6 +1,6 @@
 {
     "name": "@diia-inhouse/diia-logger",
-    "version": "4.7.60",
+    "version": "4.7.61",
     "description": "Logger package",
     "license": "SEE LICENSE IN LICENSE.md",
     "author": "diia-team",
@@ -38,9 +38,9 @@
     },
     "devDependencies": {
         "@diia-inhouse/configs": "7.4.0",
-        "@diia-inhouse/oxc-config": "6.2.0",
-        "@diia-inhouse/types": "14.13.1",
-        "@diia-inhouse/utils": "6.2.22",
+        "@diia-inhouse/oxc-config": "6.2.1",
+        "@diia-inhouse/types": "14.13.3",
+        "@diia-inhouse/utils": "6.2.23",
         "@types/lodash": "4.17.24",
         "@vitest/coverage-v8": "4.1.11",
         "@vitest/ui": "4.1.11",
