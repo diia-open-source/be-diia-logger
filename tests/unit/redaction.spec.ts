@@ -219,6 +219,13 @@ describe('DiiaLogger', () => {
                 },
                 expectedLogData: '{"phoneNumber":"4853******8"}',
             },
+            {
+                message: 'should partially redact the delivery receiver phone number',
+                inputData: {
+                    receiverPhoneNumber: '380991234567',
+                },
+                expectedLogData: '{"receiverPhoneNumber":"38099******7"}',
+            },
         ]
 
         it.each(cases)('$message', async (params) => {

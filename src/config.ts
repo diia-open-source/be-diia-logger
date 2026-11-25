@@ -144,7 +144,15 @@ export const defaultOptions: LoggerOptions = {
         ],
         fieldsToRedactItn: ['label', 'paymentPurpose', 'subject', 'value'],
         fieldsToRedactEmail: ['email', 'subjEmail', ...freeTextFields],
-        fieldsToRedactPhone: ['phone', 'phoneNumber', 'extraPhoneNumber', 'personalPhone', 'subjPhone', ...freeTextFields],
+        fieldsToRedactPhone: [
+            'phone',
+            'phoneNumber',
+            'extraPhoneNumber',
+            'personalPhone',
+            'subjPhone',
+            'receiverPhoneNumber',
+            ...freeTextFields,
+        ],
     },
 }
 
